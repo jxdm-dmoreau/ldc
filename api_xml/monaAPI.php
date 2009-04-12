@@ -72,12 +72,13 @@ class monaAPI {
      * @return xml string
      */
     function getOperationsXml($dateBegin, $dateEnd) {
-        $query = "SELECT operations.id, operations.date, operations.value, operations.confirm, op_cat.value as cat_value, op_cat.cat_id, op_labels.label_id
-             FROM operations, op_cat, cat,op_labels
+        $query = "SELECT operations.id, operations.date, operations.value, operations.confirm, op_cat.value as cat_value, op_cat.cat_id, op_labels.label_id, labels.name as label_name
+             FROM operations, op_cat, cat, op_labels, labels
             WHERE  date >= 20080101
             AND date <= 20091212
             AND operations.id = op_cat.op_id
             AND op_cat.cat_id = cat.id
+            AND op_labels.label_id = labels.id
             AND operations.id = op_labels.op_id";
         $res = $this->mysql->query($query);
 
@@ -89,7 +90,7 @@ class monaAPI {
             $tab[$id]['date']              = $date;
             $tab[$id]['confirm']           = $confirm;
             $tab[$id]['cat'][$cat_id]      = $cat_value;
-            $tab[$id]['labels'][$label_id] = $label_id; // la table de hachage permet d'éviter les doublons
+            $tab[$id]['labels'][$label_id] = $label_name;
         }
 
         /* Génération du XML */
@@ -101,8 +102,8 @@ class monaAPI {
             $xml .= "\t\t<date>".$value['date']."</date>\n";
             /* labels */
             $xml .= "\t\t<labels>\n";
-            foreach($value['labels'] as $value2) {
-                $xml .= "\t\t\t<label>$value2</label>\n";
+            foreach($value['labels'] as $key2 => $value2) {
+                $xml .= "\t\t\t<label id=\"$key2\">$value2</label>\n";
             }
             $xml .= "\t\t</labels>\n";
             /* categories */
