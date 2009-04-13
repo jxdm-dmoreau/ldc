@@ -8,6 +8,7 @@ var EponaCategoriesChildren = new Array();
 
 /* STATS */
 var EponaStatsByCat = new Array();
+var EponaStats = new Array();
 
 
 /* FONCTION D'INIT */
@@ -16,6 +17,10 @@ function eponaRegister()
     $("#tabs").tabs();
     loadCategories();
     loadOperationsList();
+    swfobject.embedSWF("open-flash-chart.swf", "ofc", "550", "200", "9.0.0", "expressInstall.swf");
+}
+function debug(msg) {
+    $("#log").append("<p>"+msg+"</p>");
 }
 
 /******************************************************************************
@@ -23,6 +28,54 @@ function eponaRegister()
  *****************************************************************************/
 function loadOperationsList()
 {
+
+    function addOpInStats(year, month, id, value) {
+        if(!EponaCategoriesById[id]) {
+            alert("EponaCategoriesById["+id+"] not defined!");
+        }
+        var fatherId = EponaCategoriesById[id].fatherId;
+        if (!EponaStats[id]) {
+             EponaStats[id] = new Array();
+        }
+        if (!EponaStats[id][year]) {
+            EponaStats[id][year] = new Array();
+        }
+        if (!EponaStats[id][year][month]) {
+            EponaStats[id][year][month] = 0;
+        }
+        debug("Ajout de "+value+" pour la catégorie"+id);
+        EponaStats[id][year][month] += parseFloat(value);
+        if (fatherId != 0) {
+            addOpInStats(year, month, fatherId, value);
+        }
+    }
+
+    function generateStats(op)
+    {
+        for(var i=0; i < op.categorie.length; i++) {
+            var id = op.categorie[i].id;
+            if (!EponaStatsByCat[id]) {
+                 EponaStatsByCat[id] = 0;
+            }
+            EponaStatsByCat[id] += parseFloat(op.categorie[i].value);
+        }
+
+        /* STATS V2 */
+
+        /* split date */
+        var tmp = op.date.split(/-/);
+        var year = tmp[0];
+        var month = tmp[1];
+
+        /* loop on categories */
+        for(var i = 0; i < op.categorie.length; i++) {
+            var id = op.categorie[i].id;
+            /* loop on fathers */
+            addOpInStats(year, month, id, op.categorie[i].value);
+        }
+        return false;
+    }
+
     function processXml(xmlDoc)
     {
         jXml = $(xmlDoc);
@@ -55,14 +108,10 @@ function loadOperationsList()
                 });
             /* ajout dans la liste */
             EponaOperations.push(op);
+
             /* Stats */
-            for(var i=0; i < op.categorie.length; i++) {
-                var id = op.categorie[i].id;
-                if (!EponaStatsByCat[id]) {
-                     EponaStatsByCat[id] = 0;
-                }
-                    EponaStatsByCat[id] += parseFloat(op.categorie[i].value);
-            }
+            generateStats(op);
+
         });
 
 
@@ -117,6 +166,18 @@ function loadOperationsList()
         }
         $("#tabs-1").append(jTableStats);
 
+        for(var catId in EponaStats) {
+            for(var year in EponaStats[catId]) {
+                for(var month in EponaStats[catId][year]) {
+                    if (!EponaCategoriesById[catId])
+                        alert(catId);
+                    var catName = EponaCategoriesById[catId].name;
+                    debug("<p>"+year+"-"+month+" ["+catName+"]: "+EponaStats[catId][year][month]+"</p>");
+                }
+
+            }
+        }
+
 
         return false;
     }
@@ -165,6 +226,7 @@ function loadCategories()
     }
     $.ajax({
         type: "GET",
+        asyn: false,
         url: "api_xml/api_cat.php?op=get",
         success: processXml,
         error : function (ret) {
@@ -174,3 +236,8 @@ function loadCategories()
     });
 
 }
+
+
+
+
+
