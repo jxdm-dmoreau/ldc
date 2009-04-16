@@ -1,3 +1,6 @@
+
+
+
 /*
  * @param
  * @return
@@ -10,58 +13,10 @@ function findSWF(movieName) {
   }
 }
 
-/* 
- * retourn l'objet Json nécéssaire à OFC 
- * @param tab tableau sous la form?
- * @return json
- */
-function ofc_createLines(values) {
-    /* max value */
-    var max = Math.max.apply(Math, values);
-    var nbValues = values.length;
-    var height = 200;
-    var pxByStep = 20;
-    var nbStep = Math.ceil(height/pxByStep);
-    var steps = Math.ceil(max/nbStep);
-    var maxy = steps*Math.ceil(max/steps);
-
-    dataLines = {
-        "elements": [{
-            "type": "line",
-            "values": values
-        }],
-        "title": { "text": "Pour Jie, que j'aimerais toujours" },
-        "y_axis": { "min": 0, "max": maxy , "steps": steps}, 
-        "x_axis": { "min": 0, "max": nbValues, "steps": 1 , "labels": { "steps": 2, "rotate": 270, "labels": ["Janvier 2008", "Février 2008"]}},
-       "bg_colour": "#F9F9F9" 
-    };
-    return dataLines;
-}
 
 
 
 
-var data;
-
-/**
- *
- *
- */
-function open_flash_chart_data()
-{
-    values = new Array(1,2,33.4,50,12,56,53,48);
-    data = ofc_createLines(values);
-    return JSON.stringify(data);
-    
-}
-
-
-
-
-function update(d) {
-            var tmp = findSWF("ofc");
-            tmp.load(JSON.stringify(d));
-}
 
 
 

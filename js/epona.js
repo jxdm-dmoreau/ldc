@@ -17,7 +17,12 @@ function eponaRegister()
     $("#tabs").tabs();
     loadCategories();
     loadOperationsList();
-    swfobject.embedSWF("open-flash-chart.swf", "ofc", "550", "200", "9.0.0", "expressInstall.swf");
+    var values = new Array(0,2,4,12,2,3,6);
+    $("#tabs-1").Ofc({"values": values, "title":"Une jolie courbe (moins jolie que Jie)", "height":"250", "width":"600"});
+    values = new Array(23,2,4,5,2,3,6);
+    $("#but").click( function() {
+        $("#tabs-1").update({"values": values, "title":"Une jolie courbe (moins jolie que Jie)", "height":"250", "width":"600"});
+    });
 }
 function debug(msg) {
     $("#log").append("<p>"+msg+"</p>");
