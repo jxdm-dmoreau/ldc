@@ -18,10 +18,19 @@ function eponaRegister()
     loadCategories();
     loadOperationsList();
     var values = new Array(0,2,4,12,2,3,6);
-    $("#tabs-1").ofc({"values": values, "height":"250", "width":"600"});
+    var values_tab = [];
+    values_tab[0] = [0,2,5,4,1,2,3];
+    values_tab[1] = [1,1,1,4,5,34,4];
+    values_tab[2] = [10,12,1,5,7,9,10];
+    values_tab[3] = [1.2,8,3,3,1,2,4];
+    $("#ofc").ofc('add', {"values": values_tab, "height":"250", "width":"800"});
     values = new Array(23,2,4,5,2,3,6);
     $("#but").click( function() {
-        $("#tabs-1").update({"values": values, "title":"Une jolie courbe (moins jolie que Jie)", "height":"250", "width":"600"});
+        values_tab[0] = [1,2,5,4];
+        values_tab[1] = [1,4,1,4];
+        values_tab[2] = [10,2,1,5];
+        values_tab[3] = [5.2,8,3,3];
+        $("#ofc").ofc('update', {"values": values_tab});
     });
 }
 function debug(msg) {

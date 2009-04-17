@@ -13,6 +13,9 @@ function getData(data) {
 
 (function($){
 
+    var ofc_options = new Array();
+
+
     /* 
      * retourn l'objet Json nécéssaire à OFC 
      * @param tab tableau sous la form?
@@ -24,19 +27,29 @@ function getData(data) {
         var title  = params.title;
         var labels = params.labels;
         /* calculs */
-        var max = Math.max.apply(Math, values);
-        var nbValues = values.length;
+        var nbDim = values.length;
+        var max = 0;
+        for(var j = 0; j < nbDim; j++) {
+            max = Math.max(max, Math.max.apply(Math, values[j]));
+        }
+        var nbValues = values[0].length;
         var height = 200;
         var pxByStep = 20;
         var nbStep = Math.ceil(height/pxByStep);
         var steps = Math.ceil(max/nbStep);
         var maxy = steps*Math.ceil(max/steps);
 
-        dataLines = {
-            "elements": [{
+        var elements = [];
+        for(var j = 0; j < nbDim; j++) {
+            elements[j] = {
                 "type": "line",
-                "values": values
-            }],
+                "values": values[j],
+                "colour": params.colours[j%params.colours.length],
+            };
+        }
+
+        dataLines = {
+            "elements": elements,
             "title": { "text": title },
             "y_axis": { "min": 0,
                         "max": maxy,
@@ -54,21 +67,59 @@ function getData(data) {
                         "colour":"#9BC3FF",
                         "grid-colour":"#EDEDED"
             },
-           "bg_colour": "#F9F9F9" 
+           "bg_colour": "#F9F9F9",
+          "tooltip": { "shadow": true, "stroke": 2, "colour": "#9BC3FF", "body": "{font-size: 10px; font-weight: bold; color: #000000;}" } 
         };
         return dataLines;
     };
 
-    $.fn.ofc = function(options) {
+    function addButtons(opts)
+    {
+        $("#conf").empty();
+        var values = opts.values;
+        for(var i = 0; i < values.length; i++) {
+            var button = $("<button>"+i+"</button>");
+            button.click( function () {
+                    //var opts = ofc_options["ofc"];
+                    var values2 = [];
+                    var j =0;
+                    for (var i = 0; i < opts.values.length; i++) {
+                        if (i != $(this).text()) {
+                            values2[j] = values[i];
+                            j++;
+                        }
+                    }
+                    opts.values = values2;
+                        
+                    $("#ofc").ofc("update", opts);
+            });
+            $("#conf").append(button);
+        }
+    };
+
+    $.fn.ofc = function(method, options) {
             // Extend our default options with those provided.
             // Note that the first arg to extend is an empty object -
             // this is to keep from overriding our "defaults" object.
             var opts = $.extend({}, $.fn.ofc.defaults, options);
-
-            var data = createLines(opts);
-            data = JSON.stringify(data);
-            this.append(swfobject.embedSWF("open-flash-chart.swf", "ofc", opts.width, opts.height, "9.0.0", "expressInstall.swf", {"get-data":"getData", "id": data}, false));
-            return this;
+            return this.each(function() {
+                // plugin code
+                $this = $(this);
+                id = $this.attr("id");
+                if (method == "add") {
+                    ofc_options[id] = opts;
+                    var data = createLines(opts);
+                    addButtons(opts);
+                    data = JSON.stringify(data);
+                    $this.append(swfobject.embedSWF("open-flash-chart.swf", id, opts.width, opts.height, "9.0.0", "expressInstall.swf", {"get-data":"getData", "id": data}, false));
+                } else if (method == "update") {
+                    opts = $.extend({}, ofc_options[id], options); 
+                    var data = createLines(opts);
+                    data = JSON.stringify(data);
+                    var tmp = findSWF(id);
+                    tmp.load(data);
+                }
+            });
         };
 
     /* default options */
@@ -76,20 +127,9 @@ function getData(data) {
         "values" : new Array(0,0),
         "title"  : "title",
         "height" : 250,
-        "width"  : 600
-    };
+        "width"  : 600,
+        "colours": ["#FF0000", "#00FFOO", "#0000FF", "#FF9900"]
 
-    $.fn.update = function(options) {
-        // Extend our default options with those provided.
-        // Note that the first arg to extend is an empty object -
-        // this is to keep from overriding our "defaults" object.
-        var opts = $.extend({}, $.fn.ofc.defaults, options);
-
-        var data = createLines(opts);
-        data = JSON.stringify(data);
-        var tmp = findSWF("ofc");
-        tmp.load(data);
-        return this;
     };
 
 })(jQuery);
