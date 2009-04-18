@@ -1,3 +1,9 @@
+/* Tableau conteant toutes les operations */
+var OPERATIONS = new Array();
+var CATEGORIES_BY_FATHER = new Array();
+var CATEGORIES = new Array();
+
+
 /* OPERATIONS */
 var EponaOperations = new Array();
 
@@ -15,8 +21,6 @@ var EponaStats = new Array();
 function eponaRegister()
 {
     $("#tabs").tabs();
-    loadCategories();
-    loadOperationsList();
     var values = new Array(0,2,4,12,2,3,6);
     var values_tab = [];
     values_tab[0] = [0,2,5,4,1,2,3];
@@ -24,15 +28,10 @@ function eponaRegister()
     values_tab[2] = [10,12,1,5,7,9,10];
     values_tab[3] = [1.2,8,3,3,1,2,4];
     $("#ofc").ofc('add', {"values": values_tab, "height":"250", "width":"800"});
-    values = new Array(23,2,4,5,2,3,6);
-    $("#but").click( function() {
-        values_tab[0] = [1,2,5,4];
-        values_tab[1] = [1,4,1,4];
-        values_tab[2] = [10,2,1,5];
-        values_tab[3] = [5.2,8,3,3];
-        $("#ofc").ofc('update', {"values": values_tab});
-    });
+    epona_init();
+    display_all_operations('#jie');
 }
+
 function debug(msg) {
     $("#log").append("<p>"+msg+"</p>");
 }
@@ -90,87 +89,12 @@ function loadOperationsList()
         return false;
     }
 
-    function processXml(xmlDoc)
-    {
-        jXml = $(xmlDoc);
-
-        /****************************************
-        * Traitement du fichier XML             *
-        ****************************************/
-        jXml.find("operation").each(function() {
-            var op = {
-                "id": $(this).attr("id"),
-                "date": $(this).find('date').text(),
-                "value": $(this).find('value').text(),
-                "confirm": $(this).find('confirm').text()
-            };
-            /* categories */
-            op.categorie = new Array();
-            $(this).find('categorie').each( function() {
-                op.categorie.push({
-                    "id": $(this).attr("id"),
-                    "value": $(this).text()
-                    });
-                });
-            /* labels */
-            op.labels = new Array();
-            $(this).find('label').each( function() {
-                op.labels.push({
-                    "id": $(this).attr("id"),
-                    "name": $(this).text()
-                    });
-                });
-            /* ajout dans la liste */
-            EponaOperations.push(op);
-
-            /* Stats */
-            generateStats(op);
-
-        });
-
-
-        /*******************************************
-         * Ajout des opérations dans la page       *
-         * ****************************************/
-        jTable = $('<table>');
-        jThead = $('<thead>');
-        jTr = $('<tr>');
-        jTr.append("<th>id</th>");
-        jTr.append("<th>Date</th>");
-        jTr.append("<th>Crédit</th>");
-        jTr.append("<th>Dédit</th>");
-        jTr.append("<th>Labels</th>");
-        jThead.append(jTr);
-        jTable.append(jThead);
-        for(var i=0; i<EponaOperations.length; i++) {
-            var id = EponaOperations[i].id;
-            var date = EponaOperations[i].date;
-            var value = EponaOperations[i].value;
-            var credit = (value > 0)?value:0;
-            var debit = (value > 0)?0:value*(-1);
-            var labels = '';
-            for(var j=0; j<EponaOperations[i].labels.length; j++) {
-                labels += EponaOperations[i].labels[j].name;
-            }
-            var tr = $("<tr>");
-            tr.append("<td>"+id+"</td>");
-            tr.append("<td>"+date+"</td>");
-            tr.append("<td>"+credit+"</td>");
-            tr.append("<td>"+debit+"</td>");
-            tr.append("<td>"+labels+"</td>");
-            jTable.append(tr);
-
-        }
-        var jDiv = $("<div id=\"liste-op\">");
-        jDiv.append(jTable);
-        //jDiv.draggable();
-        //jDiv.resizable();
-        $("#tabs-1").append(jDiv);
 
 
         /*******************************************
          * Ajout des Stats dans la page
          * ****************************************/
+        /*
         var jTableStats = $('<table></table>');
         for(var i in EponaStatsByCat) {
             var id =  i;
@@ -191,20 +115,9 @@ function loadOperationsList()
 
             }
         }
+        */
 
 
-        return false;
-    }
-
-    $.ajax({
-        type: "GET",
-        url: "api_xml/api_operations.php",
-        success: processXml,
-        error : function (ret) {
-            $("#log").append(ret);
-                return false;
-            }
-    });
 
 }
 
@@ -212,46 +125,190 @@ function loadOperationsList()
 
 
 
-/******************************************************************************
- * FONCTION CATEGORIES
- *****************************************************************************/
-function loadCategories()
-{
-    function processXml(xmlDoc)
-    {
-        jXml = $(xmlDoc);
-        jXml.find("categorie").each( function() {
-            var name = $(this).attr('name');
-            var fatherId = $(this).attr('father_id');
-            var id = $(this).attr('id');
-            var cat = {
-                'id': id,
-                'name': name,
-                'fatherId': fatherId
-            };
-            EponaCategories.push(cat);
-            EponaCategoriesById[id] = cat;
-            EponaCategoriesChildren[fatherId] = cat;
+
+/* VERSION FINALE QUE JE PRESENTERAI A LA FEMME DE MA VIE: JIE XING */
+
+/*  */
+function epona_init() {
+
+    init_operations();
+    init_categories();
+
+    /* 
+     * initiliser la liste des opérations
+     */
+    function init_operations() {
+        /* get operations list */
+        $.ajax({
+            type: "GET",
+            url: "api_xml/api_operations.php",
+            success: parse_xml,
+            async: false,
+            error : function (ret) { $("#log").append(ret); return false; }
+
         });
 
+        function parse_xml(xml) {
 
-
-        return false;
+            $xml = $(xml);
+            $xml.find("operation").each(function() {
+                var op = {
+                    "id"     : $(this).attr("id"),
+                    "date"   : $(this).find('date').text(),
+                    "value"  : $(this).find('value').text(),
+                    "confirm": $(this).find('confirm').text()
+                };
+                /* categories */
+                op.categorie = new Array();
+                $(this).find('categorie').each( function() {
+                    op.categorie.push({
+                        "id": $(this).attr("id"),
+                        "value": $(this).text()
+                        });
+                    });
+                /* labels */
+                op.labels = new Array();
+                $(this).find('label').each( function() {
+                    op.labels.push({
+                        "id": $(this).attr("id"),
+                        "name": $(this).text()
+                        });
+                    });
+                /* ajout dans la liste */
+                OPERATIONS.push(op);
+            });
+        }
     }
-    $.ajax({
-        type: "GET",
-        asyn: false,
-        url: "api_xml/api_cat.php?op=get",
-        success: processXml,
-        error : function (ret) {
-            $("#log").append(ret);
-                return false;
-            }
-    });
+
+
+    /*
+     * Initialiser la liste des catégories
+     */
+    function init_categories() {
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: "api_xml/api_cat.php?op=get",
+            success: parse_xml,
+            error : function (ret) { $("#log").append(ret); return false; }
+        });
+
+        function parse_xml(xml)
+        {
+            $Xml = $(xml);
+            $Xml.find("categorie").each( function() {
+                var name = $(this).attr('name');
+                var fatherId = $(this).attr('father_id');
+                var id = $(this).attr('id');
+                var cat = {
+                    'id': id,
+                    'name': name,
+                    'fatherId': fatherId
+                };
+                CATEGORIES[id] = cat;
+                if (!CATEGORIES_BY_FATHER[fatherId]) {
+                    CATEGORIES_BY_FATHER[fatherId] = [];
+                }
+                CATEGORIES_BY_FATHER[fatherId].push(id);
+            });
+            return false;
+        }
+    }
+
 
 }
 
 
+/* Affichage */
+
+function display_all_operations(id) {
+    $div = $(id);
+    // on vide
+    $div.empty();
+    // sort the array by date
+    OPERATIONS.sort(sortByDate);
+    
+    var $Table = $('<table>');
+    /* header */
+    var $Thead = $('<thead>');
+    var $Tr = $('<tr>');
+    $Tr.append("<th>id</th>");
+    $Tr.append("<th>Date</th>");
+    $Tr.append("<th>Crédit</th>");
+    $Tr.append("<th>Dédit</th>");
+    $Tr.append("<th>Détails</th>");
+    $Tr.append("<th>Labels</th>");
+    $Thead.append($Tr);
+    $Table.append($Thead);
+    /* body */
+    for (var i in OPERATIONS) {
+        var op = OPERATIONS[i];
+        $Table.append(operation_html(op));
+    }
+    $div.append($Table);
+
+}
+
+function operation_html(op) {
+    var id = op.id;
+    var value = op.value;
+    var date = op.date;
+    var credit = (value > 0)?value:0;
+    var debit = (value > 0)?0:value*(-1);
+    var labels = op.labels;
+    var labels_str = '';
+    for(var j=0; j < labels.length; j++) {
+        labels_str += labels[j].name;
+    }
+    var $ul = $("<ul>");
+    for(var j in op.categorie) {
+        var cat = op.categorie[j];
+        var name = CATEGORIES[cat.id].name;
+        var $li = $('<li>');
+        $li.append(name+" : "+cat.value);
+        $ul.append($li);
+    }
+
+    var $tr = $("<tr>");
+    $tr.append($('<td>'+id+'</td>'));
+    $tr.append($('<td>'+date2str(date)+'</td>'));
+    $tr.append($('<td>'+credit+'</td>'));
+    $tr.append($('<td>'+debit+'</td>'));
+    $tr.append($('<td>').append($ul));
+    $tr.append($('<td>'+labels_str+'</td>'));
+    return $tr;
+}
 
 
+/*
+ * Formate un date (object Mysql) en une date lisible
+ * @param date : date sous la forme 1999-12-28
+ * @return la date formatée
+ */
+function date2str(date) {
+    var tmp = date.split(/-/);
+    var year = tmp[0];
+    var month = tmp[1];
+    var day = tmp[2];
+    var my_date = day+"/"+month+"/"+year;
+    return my_date;
+}
+
+function sortByDate(opA, opB) {
+    var dateA = opA.date;
+    var tmpA = dateA.split(/-/);
+    var yearA = tmpA[0];
+    var monthA = tmpA[1];
+    var dayA = tmpA[2];
+    var dateB = opB.date;
+    var tmpB = dateB.split(/-/);
+    var yearB = tmpB[0];
+    var monthB = tmpB[1];
+    var dayB = tmpB[2];
+
+    if (yearA > yearB)   return -1;
+    if (monthA > monthB) return -1;
+    if (dayA > dayB)     return -1;
+    return 1;
+}
 

@@ -3,7 +3,11 @@ body {
 	 font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
 }
 
-div#liste-op {
-    border: 1px dashed black;
-	 width: 400px;
+table, tr, td, th {
+    border: 1px solid #9BC3FF;
+	 /*width: 500px;	 */
+	 border-collapse: collapse;
+}
+table {
+    border: 2px solid #9BC3FF;	
 }

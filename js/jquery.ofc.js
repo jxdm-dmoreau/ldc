@@ -109,7 +109,7 @@ function getData(data) {
                 if (method == "add") {
                     ofc_options[id] = opts;
                     var data = createLines(opts);
-                    addButtons(opts);
+                    //addButtons(opts);
                     data = JSON.stringify(data);
                     $this.append(swfobject.embedSWF("open-flash-chart.swf", id, opts.width, opts.height, "9.0.0", "expressInstall.swf", {"get-data":"getData", "id": data}, false));
                 } else if (method == "update") {
