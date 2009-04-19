@@ -16,3 +16,11 @@ table th {
 	border: 2px solid #9BC3FF;
 	background-color: #9BC3FF;
 }
+
+
+div#magic-cat {
+	border: 1px solid #9BC3FF;
+	width: 500px;
+	height: 200px;
+	overflow: auto;
+}

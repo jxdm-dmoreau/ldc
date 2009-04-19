@@ -258,6 +258,36 @@ function display_stats() {
         }
     }
 
+    /* magic cat */
+    /*
+    for(var i in CATEGORIES_BY_FATHER[0]) {
+        var name = CATEGORIES[CATEGORIES_BY_FATHER[0][i]].name;
+        $ul.append("<li>"+name+"</li>");
+    }
+
+    $("#magic-cat").append($ul);
+    $ul.click(function() {
+        $("#magic-cat ul").animate({'marginLeft': '100px'});
+    });
+*/
+    var $ul = $("<ul>");
+    construct_cat_list(0, $ul);
+    $("#magic-cat").append($ul);
+
+    function construct_cat_list(id, $balise) {
+        var name = CATEGORIES[id].name;
+        $balise.append("<li>"+name+"</li>");
+        if (CATEGORIES_BY_FATHER[id]){
+            var $ul = $("<ul>");
+            for(var i in CATEGORIES_BY_FATHER[id]) {
+                construct_cat_list(CATEGORIES_BY_FATHER[id][i], $ul);
+            }
+            $balise.append($ul);
+        }
+    }
+
+
+
 
 }
 
