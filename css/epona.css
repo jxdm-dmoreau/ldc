@@ -11,3 +11,8 @@ table, tr, td, th {
 table {
     border: 2px solid #9BC3FF;	
 }
+
+table th {
+	border: 2px solid #9BC3FF;
+	background-color: #9BC3FF;
+}

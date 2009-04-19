@@ -2,126 +2,34 @@
 var OPERATIONS = new Array();
 var CATEGORIES_BY_FATHER = new Array();
 var CATEGORIES = new Array();
+var STATS = [];
+var STATS2 = [];
 
-
-/* OPERATIONS */
-var EponaOperations = new Array();
-
-/* CATEGORIES*/
-var EponaCategories = new Array();
-var EponaCategoriesById = new Array();
-var EponaCategoriesChildren = new Array();
-
-/* STATS */
-var EponaStatsByCat = new Array();
-var EponaStats = new Array();
-
+var MONTH = [];
+MONTH[1] = "Janvier";
+MONTH[2] = "Février";
+MONTH[3] = "Mars";
+MONTH[4] = "Avril";
+MONTH[5] = "Mai";
+MONTH[6] = "Juin";
+MONTH[7] = "Juillet";
+MONTH[8] = "Aout";
+MONTH[9] = "Septembre";
+MONTH[10] = "Octobre";
+MONTH[11] = "Novembre";
+MONTH[12] = "Décembre";
 
 /* FONCTION D'INIT */
 function eponaRegister()
 {
     $("#tabs").tabs();
-    var values = new Array(0,2,4,12,2,3,6);
-    var values_tab = [];
-    values_tab[0] = [0,2,5,4,1,2,3];
-    values_tab[1] = [1,1,1,4,5,34,4];
-    values_tab[2] = [10,12,1,5,7,9,10];
-    values_tab[3] = [1.2,8,3,3,1,2,4];
-    $("#ofc").ofc('add', {"values": values_tab, "height":"250", "width":"800"});
     epona_init();
     display_all_operations('#jie');
+    var data = [];
+    data[0] = generate_data_for_cat(0);
+    var labels = generate_labels();
+    $("#ofc").ofc('add', {"values": data, "height":"250", "width":"800", 'labels':labels});
 }
-
-function debug(msg) {
-    $("#log").append("<p>"+msg+"</p>");
-}
-
-/******************************************************************************
- * FONCTION OPERATIONS
- *****************************************************************************/
-function loadOperationsList()
-{
-
-    function addOpInStats(year, month, id, value) {
-        if(!EponaCategoriesById[id]) {
-            alert("EponaCategoriesById["+id+"] not defined!");
-        }
-        var fatherId = EponaCategoriesById[id].fatherId;
-        if (!EponaStats[id]) {
-             EponaStats[id] = new Array();
-        }
-        if (!EponaStats[id][year]) {
-            EponaStats[id][year] = new Array();
-        }
-        if (!EponaStats[id][year][month]) {
-            EponaStats[id][year][month] = 0;
-        }
-        debug("Ajout de "+value+" pour la catégorie"+id);
-        EponaStats[id][year][month] += parseFloat(value);
-        if (fatherId != 0) {
-            addOpInStats(year, month, fatherId, value);
-        }
-    }
-
-    function generateStats(op)
-    {
-        for(var i=0; i < op.categorie.length; i++) {
-            var id = op.categorie[i].id;
-            if (!EponaStatsByCat[id]) {
-                 EponaStatsByCat[id] = 0;
-            }
-            EponaStatsByCat[id] += parseFloat(op.categorie[i].value);
-        }
-
-        /* STATS V2 */
-
-        /* split date */
-        var tmp = op.date.split(/-/);
-        var year = tmp[0];
-        var month = tmp[1];
-
-        /* loop on categories */
-        for(var i = 0; i < op.categorie.length; i++) {
-            var id = op.categorie[i].id;
-            /* loop on fathers */
-            addOpInStats(year, month, id, op.categorie[i].value);
-        }
-        return false;
-    }
-
-
-
-        /*******************************************
-         * Ajout des Stats dans la page
-         * ****************************************/
-        /*
-        var jTableStats = $('<table></table>');
-        for(var i in EponaStatsByCat) {
-            var id =  i;
-            var name = EponaCategoriesById[id].name;
-            var value = EponaStatsByCat[i];
-            jTableStats.append($('<tr><td>'+name+'</td><td>'+value+'</td></tr>'));
-        }
-        $("#tabs-1").append(jTableStats);
-
-        for(var catId in EponaStats) {
-            for(var year in EponaStats[catId]) {
-                for(var month in EponaStats[catId][year]) {
-                    if (!EponaCategoriesById[catId])
-                        alert(catId);
-                    var catName = EponaCategoriesById[catId].name;
-                    debug("<p>"+year+"-"+month+" ["+catName+"]: "+EponaStats[catId][year][month]+"</p>");
-                }
-
-            }
-        }
-        */
-
-
-
-}
-
-
 
 
 
@@ -133,6 +41,7 @@ function epona_init() {
 
     init_operations();
     init_categories();
+    init_stats();
 
     /* 
      * initiliser la liste des opérations
@@ -211,6 +120,7 @@ function epona_init() {
                 }
                 CATEGORIES_BY_FATHER[fatherId].push(id);
             });
+            CATEGORIES['0'] = { 'name':'Total', 'id' : 0, 'fatherId' : -1};
             return false;
         }
     }
@@ -220,7 +130,6 @@ function epona_init() {
 
 
 /* Affichage */
-
 function display_all_operations(id) {
     $div = $(id);
     // on vide
@@ -263,7 +172,8 @@ function operation_html(op) {
     var $ul = $("<ul>");
     for(var j in op.categorie) {
         var cat = op.categorie[j];
-        var name = CATEGORIES[cat.id].name;
+        //var name = CATEGORIES[cat.id].name;
+        var name = categorie2str(CATEGORIES[cat.id]);
         var $li = $('<li>');
         $li.append(name+" : "+cat.value);
         $ul.append($li);
@@ -279,6 +189,76 @@ function operation_html(op) {
     return $tr;
 }
 
+function generate_data_for_cat(id) {
+    // extract the first and last date
+    OPERATIONS.sort(sortByDate);
+    var dateEnd = extract_date(OPERATIONS[0].date);
+    var date = extract_date(OPERATIONS[OPERATIONS.length-1].date);
+
+    // loop on each month
+    var data = [];
+    while(!(date.year > dateEnd.year || (date.year == dateEnd.year &&  date.month > dateEnd.month))) {
+        // code here...
+        if (!STATS[id][date.year] || !STATS[id][date.year][date.month]) {
+            data.push(0);
+        } else {
+            data.push(STATS[id][date.year][date.month]);
+        }
+
+        date = increase_date_by_month(date);
+    }
+    return data;
+}
+
+function generate_labels() {
+    // extract the first and last date
+    OPERATIONS.sort(sortByDate);
+    var dateEnd = extract_date(OPERATIONS[0].date);
+    var date = extract_date(OPERATIONS[OPERATIONS.length-1].date);
+
+    // loop on each month
+    var labels = [];
+    while(!(date.year > dateEnd.year || (date.year == dateEnd.year &&  date.month > dateEnd.month))) {
+        // code here...
+        var month_str = MONTH[date.month];
+        labels.push(month_str+" "+date.year);
+        date = increase_date_by_month(date);
+    }
+    return labels;
+}
+
+function increase_date_by_month(date) {
+    date.month++;
+    if (date.month == 13) {
+        date.month = 1;
+        date.year++;
+    }
+    return date;
+}
+
+
+function display_stats() {
+
+    debug(dateMin+" - "+dateMax);
+    return;
+
+    //$("#ofc").ofc('add', {"values": values_tab, "height":"250", "width":"800"});
+    STATS[0]
+    // loop on categorie
+    for(var i in STATS) {
+        var name = categorie2str(CATEGORIES[i]);
+        // loop on year
+        for (var j in STATS[i]) {
+            var year = j;
+            // loop on month
+            for (var k in STATS[i][j]) {
+                var month = k;
+                var value = STATS[i][j][k];
+                debug(name+" : "+value+" ("+year+")" );
+            }
+        }
+    }
+}
 
 /*
  * Formate un date (object Mysql) en une date lisible
@@ -294,21 +274,92 @@ function date2str(date) {
     return my_date;
 }
 
+function categorie2str(cat) {
+    var my_cat = cat.name;
+    var father_id = cat.fatherId;
+    while(father_id != 0 && father_id != -1) {
+        if (!CATEGORIES[father_id]) alert(father_id);
+        my_cat = CATEGORIES[father_id].name + ">>" + my_cat;
+        if (father_id != 0) father_id = CATEGORIES[father_id].fatherId;
+    }
+    return my_cat;
+}
+
 function sortByDate(opA, opB) {
     var dateA = opA.date;
     var tmpA = dateA.split(/-/);
-    var yearA = tmpA[0];
-    var monthA = tmpA[1];
-    var dayA = tmpA[2];
+    var yearA = parseFloat(tmpA[0]);
+    var monthA = parseFloat(tmpA[1]);
+    var dayA = parseFloat(tmpA[2]);
     var dateB = opB.date;
     var tmpB = dateB.split(/-/);
-    var yearB = tmpB[0];
-    var monthB = tmpB[1];
-    var dayB = tmpB[2];
-
+    var yearB = parseFloat(tmpB[0]);
+    var monthB = parseFloat(tmpB[1]);
+    var dayB = parseFloat(tmpB[2]);
     if (yearA > yearB)   return -1;
+    if (yearA < yearB)   return 1;
     if (monthA > monthB) return -1;
+    if (monthA < monthB) return 1;
     if (dayA > dayB)     return -1;
+    if (dayA < dayB)     return 1;
+    // same date, return the...?
     return 1;
 }
 
+
+function init_stats() {
+    for(var i in OPERATIONS) {
+        add_operation_in_stats(OPERATIONS[i]);
+    }
+}
+
+function extract_date(date) {
+    var tmp = date.split(/-/);
+    var year = parseFloat(tmp[0]);
+    var month = parseFloat(tmp[1]);
+    var day = parseFloat(tmp[2]);
+    return {'day':day, 'month':month, 'year':year};
+}
+
+function add_operation_in_stats(op) {
+
+        var date = extract_date(op.date);
+
+        /* loop on categories */
+        for(var i in op.categorie) {
+            var id = op.categorie[i].id;
+            /* loop on fathers */
+            add_value_in_stats(date.year, date.month, id, op.categorie[i].value);
+        }
+
+    function add_value_in_stats(year, month, id, value) {
+        if(!CATEGORIES[id]) {
+            alert("CATEGORIES["+id+"] not defined!");
+            return undefined;
+        }
+        if (!STATS[id])              STATS[id] = [];
+        if (!STATS[id][year])        STATS[id][year] = [];
+        if (!STATS[id][year][month]) STATS[id][year][month] = 0;
+        STATS[id][year][month] += parseFloat(value);
+
+        // father
+        var fatherId = CATEGORIES[id].fatherId;
+        if (fatherId != -1) {
+            add_value_in_stats(year, month, fatherId, value);
+        }
+    }
+}
+
+function debug(msg) {
+    if (window.console && window.console.log)
+        window.console.log(msg);
+};
+
+function error(msg) {
+    if (window.console && window.console.error)
+        window.console.error(msg);
+};
+function warning(msg) {
+    if (window.console && window.console.warn)
+        window.console.warn(msg);
+};
