@@ -25,10 +25,7 @@ function eponaRegister()
     $("#tabs").tabs();
     epona_init();
     display_all_operations('#jie');
-    var data = [];
-    data[0] = generate_data_for_cat(0);
-    var labels = generate_labels();
-    $("#ofc").ofc('add', {"values": data, "height":"250", "width":"800", 'labels':labels});
+    display_stats();
 }
 
 
@@ -199,7 +196,7 @@ function generate_data_for_cat(id) {
     var data = [];
     while(!(date.year > dateEnd.year || (date.year == dateEnd.year &&  date.month > dateEnd.month))) {
         // code here...
-        if (!STATS[id][date.year] || !STATS[id][date.year][date.month]) {
+        if (!STATS[id] || !STATS[id][date.year] || !STATS[id][date.year][date.month]) {
             data.push(0);
         } else {
             data.push(STATS[id][date.year][date.month]);
@@ -238,26 +235,30 @@ function increase_date_by_month(date) {
 
 
 function display_stats() {
+    var data = [];
+    data[0] = generate_data_for_cat(0);
+    var labels = generate_labels();
+    $("#ofc").ofc('add', {"values": data, "height":"250", "width":"800", 'labels':labels});
+    // fill the select (combo-box)
+    //$("#select_cat")
+    fill_select(0);
+    $("#select_cat").change(function() {
+            var id = $("#select_cat").val();
+            data[0] = generate_data_for_cat(id);
+            $("#ofc").ofc('update', {"values": data});
+        });
 
-    debug(dateMin+" - "+dateMax);
-    return;
 
-    //$("#ofc").ofc('add', {"values": values_tab, "height":"250", "width":"800"});
-    STATS[0]
-    // loop on categorie
-    for(var i in STATS) {
-        var name = categorie2str(CATEGORIES[i]);
-        // loop on year
-        for (var j in STATS[i]) {
-            var year = j;
-            // loop on month
-            for (var k in STATS[i][j]) {
-                var month = k;
-                var value = STATS[i][j][k];
-                debug(name+" : "+value+" ("+year+")" );
-            }
+
+    function fill_select(id) {
+        var name = categorie2str(CATEGORIES[id]);
+        $("#select_cat").append("<option value=\""+id+"\">"+name+"</option>");
+        for(var i in CATEGORIES_BY_FATHER[id]) {
+            fill_select(CATEGORIES_BY_FATHER[id][i]);
         }
     }
+
+
 }
 
 /*
