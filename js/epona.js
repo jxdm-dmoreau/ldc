@@ -240,7 +240,6 @@ function display_stats() {
     var labels = generate_labels();
     $("#ofc").ofc('add', {"values": data, "height":"250", "width":"800", 'labels':labels});
     // fill the select (combo-box)
-    //$("#select_cat")
     fill_select(0);
     $("#select_cat").change(function() {
             var id = $("#select_cat").val();
@@ -259,24 +258,21 @@ function display_stats() {
     }
 
     /* magic cat */
-    /*
-    for(var i in CATEGORIES_BY_FATHER[0]) {
-        var name = CATEGORIES[CATEGORIES_BY_FATHER[0][i]].name;
-        $ul.append("<li>"+name+"</li>");
-    }
-
-    $("#magic-cat").append($ul);
-    $ul.click(function() {
-        $("#magic-cat ul").animate({'marginLeft': '100px'});
-    });
-*/
     var $ul = $("<ul>");
     construct_cat_list(0, $ul);
     $("#magic-cat").append($ul);
 
     function construct_cat_list(id, $balise) {
         var name = CATEGORIES[id].name;
-        $balise.append("<li>"+name+"</li>");
+        var $li = $("<li cat=\""+id+"\">");
+        $li.click(function() {
+            var id = $(this).attr("cat");
+            $(this).addClass("selected");
+            data[0] = generate_data_for_cat(id);
+            $("#ofc").ofc('update', {"values": data});
+        });
+        $li.append(name);
+        $balise.append($li);
         if (CATEGORIES_BY_FATHER[id]){
             var $ul = $("<ul>");
             for(var i in CATEGORIES_BY_FATHER[id]) {

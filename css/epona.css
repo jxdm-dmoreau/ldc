@@ -5,7 +5,6 @@ body {
 
 table, tr, td, th {
     border: 1px solid #9BC3FF;
-	 /*width: 500px;	 */
 	 border-collapse: collapse;
 }
 table {
@@ -23,4 +22,8 @@ div#magic-cat {
 	width: 500px;
 	height: 200px;
 	overflow: auto;
+}
+
+li.selected {
+	text-decoration: underline;
 }

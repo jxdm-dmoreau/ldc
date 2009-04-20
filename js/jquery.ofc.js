@@ -73,54 +73,30 @@ function getData(data) {
         return dataLines;
     };
 
-    function addButtons(opts)
-    {
-        $("#conf").empty();
-        var values = opts.values;
-        for(var i = 0; i < values.length; i++) {
-            var button = $("<button>"+i+"</button>");
-            button.click( function () {
-                    //var opts = ofc_options["ofc"];
-                    var values2 = [];
-                    var j =0;
-                    for (var i = 0; i < opts.values.length; i++) {
-                        if (i != $(this).text()) {
-                            values2[j] = values[i];
-                            j++;
-                        }
-                    }
-                    opts.values = values2;
-                        
-                    $("#ofc").ofc("update", opts);
-            });
-            $("#conf").append(button);
-        }
-    };
 
     $.fn.ofc = function(method, options) {
-            // Extend our default options with those provided.
-            // Note that the first arg to extend is an empty object -
-            // this is to keep from overriding our "defaults" object.
-            var opts = $.extend({}, $.fn.ofc.defaults, options);
-            return this.each(function() {
-                // plugin code
-                $this = $(this);
-                id = $this.attr("id");
-                if (method == "add") {
-                    ofc_options[id] = opts;
-                    var data = createLines(opts);
-                    //addButtons(opts);
-                    data = JSON.stringify(data);
-                    $this.append(swfobject.embedSWF("open-flash-chart.swf", id, opts.width, opts.height, "9.0.0", "expressInstall.swf", {"get-data":"getData", "id": data}, false));
-                } else if (method == "update") {
-                    opts = $.extend({}, ofc_options[id], options); 
-                    var data = createLines(opts);
-                    data = JSON.stringify(data);
-                    var tmp = findSWF(id);
-                    tmp.load(data);
-                }
-            });
-        };
+        // Extend our default options with those provided.
+        // Note that the first arg to extend is an empty object -
+        // this is to keep from overriding our "defaults" object.
+        var opts = $.extend({}, $.fn.ofc.defaults, options);
+        return this.each(function() {
+            // plugin code
+            $this = $(this);
+            id = $this.attr("id");
+            if (method == "add") {
+                ofc_options[id] = opts;
+                var data = createLines(opts);
+                data = JSON.stringify(data);
+                $this.append(swfobject.embedSWF("open-flash-chart.swf", id, opts.width, opts.height, "9.0.0", "expressInstall.swf", {"get-data":"getData", "id": data}, false));
+            } else if (method == "update") {
+                opts = $.extend({}, ofc_options[id], options); 
+                var data = createLines(opts);
+                data = JSON.stringify(data);
+                var tmp = findSWF(id);
+                tmp.load(data);
+            }
+        });
+    };
 
     /* default options */
     $.fn.ofc.defaults = {
