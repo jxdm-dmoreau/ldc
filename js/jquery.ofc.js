@@ -88,7 +88,7 @@ function getData(data) {
                 ofc_options[id] = opts;
                 var data = createLines(opts);
                 data = JSON.stringify(data);
-                $this.append(swfobject.embedSWF("open-flash-chart.swf", id, opts.width, opts.height, "9.0.0", "expressInstall.swf", {"get-data":"getData", "id": data}, false));
+                $this.append(swfobject.embedSWF("open-flash-chart.swf", id, opts.width, opts.height, "9.0.0", "expressInstall.swf", {"get-data":"getData", "id": data}, {"wmode":"transparent"}));
             } else if (method == "update") {
                 opts = $.extend({}, ofc_options[id], options); 
                 var data = createLines(opts);

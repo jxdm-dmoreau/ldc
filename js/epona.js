@@ -154,6 +154,16 @@ function display_all_operations(id) {
     }
     $div.append($Table);
 
+    /* formulaire */
+    $("#add-op").click( function() {
+            $("#form-add").dialog(
+                {
+                modal: true,
+                overlay: { opacity: 0.5, background: "black" },
+                title: "Ajout d'une opération" 
+                });
+            });
+
 }
 
 function show_operation_from_cat(cat_id) {

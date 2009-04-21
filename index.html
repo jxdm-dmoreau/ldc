@@ -26,6 +26,7 @@
             </div>
 
                 <div id="ofc"></div>
+                <button id="add-op">Add</button>
                 <div id="jie"></div>
             </div>
             <div id="tabs-2">
@@ -36,8 +37,24 @@
 
 
 
+
         </div>
 
+        <div id="form-add">
+            <form id="form" name="form" action="scripts/add_operation.php" method="post" >
+                <div id="form_type">
+                    Type :
+                    <input type="radio" name="form_type" value="debit" checked />Débit
+                    <input type="radio" name="form_type" value="credit" />Crédit
+                    <br />
+                </div>
+
+                <div id="form_date">
+                Date :
+                    <input autocomplete="off" type="text" size="10" value="" id="form_calendar" name="date"/>
+                </div>
+            </form>
+        </div>
 
     </body>
 </html>
