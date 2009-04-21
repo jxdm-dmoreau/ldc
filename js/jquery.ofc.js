@@ -84,6 +84,7 @@ function getData(data) {
             $this = $(this);
             id = $this.attr("id");
             if (method == "add") {
+                // store the options
                 ofc_options[id] = opts;
                 var data = createLines(opts);
                 data = JSON.stringify(data);

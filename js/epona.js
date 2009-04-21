@@ -26,6 +26,7 @@ function eponaRegister()
     epona_init();
     display_all_operations('#jie');
     display_stats();
+    /* test */
 }
 
 
@@ -155,6 +156,28 @@ function display_all_operations(id) {
 
 }
 
+function show_operation_from_cat(cat_id) {
+    var selector = generate_selector(cat_id);
+    selector=selector.substring(0,selector.length-1);
+    /* hide everything that contains another cat */
+    $("tr:has(li[cat!="+cat_id+"])").hide();
+    /* show right line */
+    $(selector).show();
+
+    function generate_selector(cat_id) {
+        var selector = "";
+        if (CATEGORIES_BY_FATHER[cat_id]) {
+            for(var i in CATEGORIES_BY_FATHER[cat_id]) {
+                selector += generate_selector(CATEGORIES_BY_FATHER[cat_id][i]);
+            }
+        }
+        selector += "tr:has(li[cat="+cat_id+"]),";
+        return selector;
+    }
+}
+
+
+
 function operation_html(op) {
     var id = op.id;
     var value = op.value;
@@ -171,7 +194,15 @@ function operation_html(op) {
         var cat = op.categorie[j];
         //var name = CATEGORIES[cat.id].name;
         var name = categorie2str(CATEGORIES[cat.id]);
-        var $li = $('<li>');
+        var $li = $("<li cat=\""+cat.id+"\">");
+        $li.click( function () {
+            var data = [];
+            var id = $(this).attr("cat");
+            data[0] = generate_data_for_cat(id);
+            var name = categorie2str(CATEGORIES[id]);
+            $("#ofc").ofc('update', {"values": data, "title":name});
+            show_operation_from_cat(id);
+            });
         $li.append(name+" : "+cat.value);
         $ul.append($li);
     }
@@ -239,23 +270,7 @@ function display_stats() {
     data[0] = generate_data_for_cat(0);
     var labels = generate_labels();
     $("#ofc").ofc('add', {"values": data, "height":"250", "width":"800", 'labels':labels});
-    // fill the select (combo-box)
-    fill_select(0);
-    $("#select_cat").change(function() {
-            var id = $("#select_cat").val();
-            data[0] = generate_data_for_cat(id);
-            $("#ofc").ofc('update', {"values": data});
-        });
 
-
-
-    function fill_select(id) {
-        var name = categorie2str(CATEGORIES[id]);
-        $("#select_cat").append("<option value=\""+id+"\">"+name+"</option>");
-        for(var i in CATEGORIES_BY_FATHER[id]) {
-            fill_select(CATEGORIES_BY_FATHER[id][i]);
-        }
-    }
 
     /* magic cat */
     var $ul = $("<ul>");
@@ -267,9 +282,10 @@ function display_stats() {
         var $li = $("<li cat=\""+id+"\">");
         $li.click(function() {
             var id = $(this).attr("cat");
-            $(this).addClass("selected");
             data[0] = generate_data_for_cat(id);
-            $("#ofc").ofc('update', {"values": data});
+            var name = categorie2str(CATEGORIES[id]);
+            $("#ofc").ofc('update', {"values": data, "title":name});
+            show_operation_from_cat(id);
         });
         $li.append(name);
         $balise.append($li);

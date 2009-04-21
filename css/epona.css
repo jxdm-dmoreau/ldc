@@ -24,6 +24,17 @@ div#magic-cat {
 	overflow: auto;
 }
 
-li.selected {
-	text-decoration: underline;
+
+table ul, table li {
+	margin:2px;
+	padding:0;
+	list-style: none;
+}
+div#magic-cat li:hover, table li:hover {
+		cursor: pointer;
+		text-decoration: underline;
+}
+
+table tr:hover {
+	background-color: #e0ffff;
 }
