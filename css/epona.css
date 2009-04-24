@@ -17,24 +17,58 @@ table th {
 }
 
 
-div#magic-cat {
-	border: 1px solid #9BC3FF;
-	width: 500px;
-	height: 200px;
-	overflow: auto;
-}
+#magic-cat {
+height: 400px;
 
+
+}
+#magic-cat h1{
+display: inline;
+}
 
 table ul, table li {
 	margin:2px;
 	padding:0;
 	list-style: none;
 }
-div#magic-cat li:hover, table li:hover {
-		cursor: pointer;
-		text-decoration: underline;
-}
+
 
 table tr:hover {
 	background-color: #e0ffff;
 }
+
+label {
+/*	border: 1px solid blue;*/
+	font-weight: bold;
+	text-align: right;
+	/*float: left;*/
+	padding-right: 1%;
+	background-color: #E8EFF4;
+}
+
+input {
+border: 1px solid #E8EFF4;
+
+}
+
+#form p {
+	
+	margin: 2px 0;
+}
+
+.ui-icon:hover {
+		cursor: pointer;
+}
+
+ol li {
+	display: inline;
+}
+
+fieldset {
+	border: 1px solid #E7EEF3;
+}
+fieldset legend {
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+	font-size: 0.8em;
+}
+

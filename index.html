@@ -22,8 +22,8 @@
                 <li><a href="#tabs-2">Tabs-2</a></li>
             </ul>
             <div id="tabs-1">
-            <div id="magic-cat">
-            </div>
+            <div id="magic-cat"></div>
+            <div id="cat-explorer"></div>
 
                 <div id="ofc"></div>
                 <button id="add-op">Add</button>
@@ -40,19 +40,39 @@
 
         </div>
 
+        <!-- formulaire d'ajout d'une opération -->
         <div id="form-add">
             <form id="form" name="form" action="scripts/add_operation.php" method="post" >
-                <div id="form_type">
-                    Type :
-                    <input type="radio" name="form_type" value="debit" checked />Débit
-                    <input type="radio" name="form_type" value="credit" />Crédit
-                    <br />
-                </div>
-
-                <div id="form_date">
-                Date :
-                    <input autocomplete="off" type="text" size="10" value="" id="form_calendar" name="date"/>
-                </div>
+            <fieldset>
+                <legend>Opération 1</legend>
+                    <ol>
+                    <!--
+                        <li>
+                            <label for="op-type">Type :</label>
+                            <ul>
+                                <li><input type="radio" id="op-type" name="op-type" value="debit" checked />Débit<br /></li>
+                                <li><input type="radio" id="op-type" name="op-type" value="credit" />Crédit</li>
+                            </ul>
+                        </li>
+                        -->
+                        <li>
+                            <label for="op-calendar">Date :</label>
+                            <input autocomplete="off" type="text" size="10" value="" id="op-calendar" name="op-calendar"/>
+                        </li>
+                        <li>
+                            <label for="op-cat">Catégories :</label>
+                            <input type="text" id="op-cat-name" name="op-cat-name"/>
+                        </li>
+                        <li>
+                            <label for="op-cat">Somme :</label>
+                            <input type="text" id="op-cat-value" name="op-cat-value"/>
+                        </li>
+                        <li>
+                            <label for="op-tags">Labels :</label>
+                            <input type="text" id="op-tags" name="op-tags"/>
+                        </li>
+                    </ol>
+                </fieldset>
             </form>
         </div>
 

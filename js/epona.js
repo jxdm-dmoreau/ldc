@@ -145,6 +145,8 @@ function display_all_operations(id) {
     $Tr.append("<th>Dédit</th>");
     $Tr.append("<th>Détails</th>");
     $Tr.append("<th>Labels</th>");
+    $Tr.append("<th></th>");
+    $Tr.append("<th></th>");
     $Thead.append($Tr);
     $Table.append($Thead);
     /* body */
@@ -155,15 +157,23 @@ function display_all_operations(id) {
     $div.append($Table);
 
     /* formulaire */
-    $("#add-op").click( function() {
-            $("#form-add").dialog(
-                {
-                modal: true,
-                overlay: { opacity: 0.5, background: "black" },
-                title: "Ajout d'une opération" 
-                });
-            });
+    $("#form-add").dialog({ buttons: { "Annuler": function() { $("#form-add").dialog("close"); },"Envoyer": test },
+                                modal: true,
+                                overlay: { opacity: 0.5, background: "black" },
+                                title: "Ajout d'opérations",
+                                autoOpen: false,
+                                zIndex:900,
+                                width: 800});
+    $("#op-calendar").datepicker({dateFormat: 'dd-mm-yy'});
 
+
+    $("#add-op").click( function() { $("#form-add").dialog("open"); });
+
+}
+
+function test(){
+    $("#add-op").dialog("close");
+    return 0;
 }
 
 function show_operation_from_cat(cat_id) {
@@ -224,7 +234,24 @@ function operation_html(op) {
     $tr.append($('<td>'+debit+'</td>'));
     $tr.append($('<td>').append($ul));
     $tr.append($('<td>'+labels_str+'</td>'));
+    var $icon = add_icon("ui-icon-pencil");
+    $icon.click(function() {
+            alert("Edition de l'opération "+id);
+            });
+    $tr.append($('<td></td>').append($icon));
+    $icon = add_icon("ui-icon-closethick");
+    $tr.append($('<td></td>').append($icon));
     return $tr;
+
+    function add_icon(name) {
+        var $div = $("<div class=\"ui-widget ui-state-default\"></div>");
+        $div.append("<div class=\"ui-icon "+name+"\"></div>");
+        $div.hover(
+                 function() { $(this).addClass('ui-state-hover'); }, 
+                 function() { $(this).removeClass('ui-state-hover'); }
+                );
+        return $div;
+    }
 }
 
 function generate_data_for_cat(id) {
@@ -281,33 +308,67 @@ function display_stats() {
     var labels = generate_labels();
     $("#ofc").ofc('add', {"values": data, "height":"250", "width":"800", 'labels':labels});
 
+    /* cat explorer */
+    //var $ul = $("<ul>");
+    //construct_cat_list(0, $ul);
+    //$("#cat-explorer").append($ul);
 
-    /* magic cat */
-    var $ul = $("<ul>");
-    construct_cat_list(0, $ul);
-    $("#magic-cat").append($ul);
 
+    /*
     function construct_cat_list(id, $balise) {
         var name = CATEGORIES[id].name;
         var $li = $("<li cat=\""+id+"\">");
-        $li.click(function() {
-            var id = $(this).attr("cat");
-            data[0] = generate_data_for_cat(id);
-            var name = categorie2str(CATEGORIES[id]);
-            $("#ofc").ofc('update', {"values": data, "title":name});
-            show_operation_from_cat(id);
-        });
-        $li.append(name);
-        $balise.append($li);
+        $li.append("<span>"+name+"</span>");
         if (CATEGORIES_BY_FATHER[id]){
             var $ul = $("<ul>");
             for(var i in CATEGORIES_BY_FATHER[id]) {
                 construct_cat_list(CATEGORIES_BY_FATHER[id][i], $ul);
             }
-            $balise.append($ul);
+            $li.append($ul);
         }
-    }
+        $balise.append($li);
+    }*/
 
+    /* magic-cat */
+    magic_cat_menu(0);
+
+    function magic_cat_menu(id) {
+        var $mc = $("#magic-cat");
+        $mc.empty();
+        /* title */
+        var title = "<h1 cat=\""+id+"\">"+CATEGORIES[id].name+"</h1>";
+        var father_id = CATEGORIES[id].fatherId;
+        while(father_id != -1) {
+            var id_c = father_id;
+            var name = CATEGORIES[id_c].name;
+            if (id_c != 0) {
+                father_id =  CATEGORIES[id_c].fatherId;
+            } else {
+                father_id = -1
+            }
+            title = "<h1 cat=\""+id_c+"\">"+name+"</h1> >> "+title;
+        }
+
+
+
+        $mc.append(title);
+        var ul = "<ul>";
+        for(var i in CATEGORIES_BY_FATHER[id]) {
+            var id2 = CATEGORIES_BY_FATHER[id][i];
+            ul += "<li cat=\""+id2+"\">"+CATEGORIES[id2].name+"</li>";
+        }
+        ul += "</ul>";
+        $mc.append(ul);
+
+    }
+        $("#magic-cat li").live("click", function() {
+                var id = $(this).attr("cat");
+                magic_cat_menu(id);
+                });
+        $("#magic-cat h1").live("click", function() {
+                var id = $(this).attr("cat");
+                magic_cat_menu(id);
+                });
 
 
 
