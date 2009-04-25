@@ -74,8 +74,8 @@ class monaAPI {
     function getOperationsXml($dateBegin, $dateEnd) {
         $query = "SELECT operations.id, operations.date, operations.value, operations.confirm, op_cat.value as cat_value, op_cat.cat_id, op_labels.label_id, labels.name as label_name
              FROM operations, op_cat, cat, op_labels, labels
-            WHERE  date >= 20080101
-            AND date <= 20091212
+            WHERE  date >= $dateBegin
+            AND date <= $dateEnd
             AND operations.id = op_cat.op_id
             AND op_cat.cat_id = cat.id
             AND op_labels.label_id = labels.id
@@ -92,7 +92,7 @@ class monaAPI {
             $tab[$id]['cat'][$cat_id]      = $cat_value;
             $tab[$id]['labels'][$label_id] = $label_name;
         }
-
+        
         /* Génération du XML */
         $xml =  "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
         $xml .= "<operations>\n";
@@ -119,6 +119,66 @@ class monaAPI {
         $xml .= "</operations>\n";
         return utf8_encode($xml);
     }
+
+    
+    /*
+     * Ajoute une opération dans la base 
+     */
+    function addOperation($date, $total, $cat_tab, $labels)
+    {
+		/* on ajoute l'opération */
+		$query = "INSERT INTO operations VALUES ('', '$date', '$total', '', '', '', '')";
+		$res = $this->mysql->query($query);
+       /* on cherche le nouvel id */
+        $query = "SELECT id FROM operations WHERE date = '$date' AND value = '$total'";
+        $result = $this->mysql->query($query);
+        $line = mysql_fetch_assoc($result);
+        $op_id = $line['id'];
+        
+        /* on ajoute les categories */        
+        $query = "INSERT into `op_cat` VALUES ";        
+		foreach($cat_tab as $key => $tab) {
+			/* construction de la requÃªte SQL */
+			if ($key != 0) {
+				$query .= ', ';
+			}
+			$cat_id =$tab['id'];
+			$value = $tab['somme'];
+			$query .= "('', '$op_id', '$cat_id', '$value')";
+		}
+		$query .= ';';
+        $result = $this->mysql->query($query);
+        
+        /* Gestion des labels */
+	    $nb_labels = count($labels);
+		for($i=0; $i<$nb_labels; $i++) {
+			/* creer les tags qui n'existent pas */
+			$query = "SELECT id FROM labels WHERE name='$labels[$i]'"; 	
+			$result = $this->mysql->query($query);
+		    $line = mysql_fetch_assoc($result);  
+		    if (isset($line['id'])) {
+		        // le label existe
+		        $label_id = $line['id'];
+		    } else {
+		        // le label n'existe pas
+		        // on l'ajoute
+		        $query = "INSERT INTO labels VALUES ('', '$labels[$i]')";
+		        $result = $this->mysql->query($query);
+		        // on récupère l'id
+		        $query = "SELECT id FROM labels WHERE name='$labels[$i]'";
+				$result = $this->mysql->query($query);
+				$line = mysql_fetch_assoc($result);
+				$label_id = $line['id'];
+		    }
+		    /* on a l'id correspondant au tag, on peut ajouter la relatetion 
+		       operation-tag */
+		    $query = "INSERT INTO `op_labels` VALUES ('', '$op_id', '$label_id')";
+		    $result = $this->mysql->query($query);
+		}
+		return $op_id;        
+    }
+   
+    
 
 }
 ?>

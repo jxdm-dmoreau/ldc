@@ -26,15 +26,17 @@ function eponaRegister()
     epona_init();
     display_all_operations('#jie');
     display_stats();
-    /* test */
+    init_form();
 }
 
 
+var DAVID;
 
 
-/* VERSION FINALE QUE JE PRESENTERAI A LA FEMME DE MA VIE: JIE XING */
 
-/*  */
+/******************************************************************************
+ * Initialisation de tout
+ *****************************************************************************/
 function epona_init() {
 
     init_operations();
@@ -126,8 +128,9 @@ function epona_init() {
 
 }
 
-
-/* Affichage */
+/******************************************************************************
+ * Liste des Opérations
+ * ***************************************************************************/
 function display_all_operations(id) {
     $div = $(id);
     // on vide
@@ -156,26 +159,226 @@ function display_all_operations(id) {
     }
     $div.append($Table);
 
+
+
+    function operation_html(op) {
+        var id = op.id;
+        var value = op.value;
+        var date = op.date;
+        var credit = (value > 0)?value:0;
+        var debit = (value > 0)?0:value*(-1);
+        var labels = op.labels;
+        var labels_str = '';
+        for(var j=0; j < labels.length; j++) {
+            labels_str += labels[j].name;
+        }
+        var $ul = $("<ul>");
+        for(var j in op.categorie) {
+            var cat = op.categorie[j];
+            //var name = CATEGORIES[cat.id].name;
+            var name = categorie2str(CATEGORIES[cat.id]);
+            var $li = $("<li cat=\""+cat.id+"\">");
+            $li.click( function () {
+                    var id = $(this).attr("cat");
+                    display_another_categorie(id)
+                });
+            $li.append(name+" : "+cat.value);
+            $ul.append($li);
+        }
+
+        var $tr = $("<tr>");
+        $tr.append($('<td>'+id+'</td>'));
+        $tr.append($('<td>'+date2str(date)+'</td>'));
+        $tr.append($('<td>'+credit+'</td>'));
+        $tr.append($('<td>'+debit+'</td>'));
+        $tr.append($('<td>').append($ul));
+        $tr.append($('<td>'+labels_str+'</td>'));
+        var $icon = add_icon("ui-icon-pencil");
+        $icon.click(function() {
+                alert("Edition de l'opération "+id);
+                });
+        $tr.append($('<td></td>').append($icon));
+        $icon = add_icon("ui-icon-closethick");
+        $tr.append($('<td></td>').append($icon));
+        return $tr;
+
+    }
+
+
+}
+
+    function add_icon(name) {
+        var $div = $("<div class=\"ui-widget ui-state-default\"></div>");
+        $div.append("<div class=\"ui-icon "+name+"\"></div>");
+        $div.hover(
+                 function() { $(this).addClass('ui-state-hover'); }, 
+                 function() { $(this).removeClass('ui-state-hover'); }
+                );
+        return $div;
+    }
+
+
+/*
+ * initialiser le formulaire
+ */
+function init_form() {
+    
     /* formulaire */
-    $("#form-add").dialog({ buttons: { "Annuler": function() { $("#form-add").dialog("close"); },"Envoyer": test },
+    $("#form-add").dialog({ buttons: { "Annuler": function() { $("#form-add").dialog("close"); },"Envoyer": send_form },
                                 modal: true,
                                 overlay: { opacity: 0.5, background: "black" },
                                 title: "Ajout d'opérations",
                                 autoOpen: false,
                                 zIndex:900,
-                                width: 800});
+                                width: 450,
+                                height: 300});
+
     $("#op-calendar").datepicker({dateFormat: 'dd-mm-yy'});
 
+    /* creer les catégories */
+    var list = '';
+    create_cat_list(0);
+    $("#tree").append(list);
+
+    /* ajouter une ligne */
+    var nb_row = 1;
+    add_row($("#form-add tbody"));
+
+
+    /* EVENTS */
+
+    /* afficher les categories quand on clique au bon endroit */
+    $(".need-tree").live("click", function () {
+        $(this).addClass("selected");
+        var pos = $(this).position();
+        var posX = pos.x;
+        var posY = pos.y + 25;
+        var $Tree = $("#tree");
+        $Tree.css("top", posY);
+        $Tree.css("left", posX);
+        $Tree.fadeIn("slow");
+        return false;
+    });
+
+    /* init le form quand on choisie une catégorie */
+    $("#tree a").live("click", function() {
+            var id = $(this).attr("href");
+            var name = $(this).text();
+            var selected = $(".selected");
+            selected.val(name);
+            selected.prev(".op-cat-id").val(id);
+            $(".selected").removeClass("selected");
+            $("#tree").fadeOut('fast');
+            return false;
+    });
+
+    /* ajout d'une ligne */
+    $(".ui-icon-plusthick").click(function() {
+            add_row($("#form-add tbody"));
+    });
 
     $("#add-op").click( function() { $("#form-add").dialog("open"); });
 
+    /* FONCTIONS */
+
+    /* ajouter une ligne */
+    function add_row($j)
+    {
+        var $row = $('<tr></tr>');
+        var row = '<td>';
+        row += '<input type="hidden" id="op-cat-id_'+nb_row+'" name="op-cat-id_'+nb_row+'" class="op-cat-id"/>';
+        row += '<input type="text" id="" name="" class="need-tree op-cat-name" />';
+        row += '</td>';
+        row += '<td>';
+        row += '<input type="text" id="op-cat-value_'+nb_row+'" name="op-cat-value_'+nb_row+'"/>';
+        row += '</td>';
+        var $td = $('<td></td>');
+        var $icon = add_icon("ui-icon-closethick");
+        $row.append(row);
+        $td.append($icon);
+        $row.append($td);
+        $j.append($row);
+        nb_row++;
+
+        /* suppression d'une ligne */
+        $icon.click(function() {
+                debug("sup");
+                var nb_row_selected = $(this).closest('tr').remove();
+                });
+    }
+
+    function create_cat_list(id)
+    {
+        var name = CATEGORIES[id].name;
+        var father = CATEGORIES[id].fatherId;
+        list +='<li><a href="'+id+'">'+name+'</a></li>';
+        if (!CATEGORIES_BY_FATHER[id])
+            return list;
+        list += '<ul>';
+        for( i in CATEGORIES_BY_FATHER[id]) {
+            var child_id = CATEGORIES_BY_FATHER[id][i];
+            create_cat_list(child_id);
+        }
+        list += '</ul>';
+        return list;
+    }
+
+
+    function send_form(){
+        /* TODO vérification du formulaire */
+        var $form = $("#form");
+        var s = $form.serialize(); 
+        $.ajax({ 
+                type: "POST", 
+                data: s, 
+                url: $form.attr("action"), 
+                success: send_form_success,
+                error: send_form_error}
+            );
+        /* ajout de l'opération dans le tableau sans attendre le résultat de la requete */
+
+        /* conversion de la date calendar en date MySQL */
+        var date = $("#op-calendar").val();
+        var tmp = date.split(/-/);
+        date = tmp[2]+'-'+tmp[1]+'-'+tmp[0];
+
+        var operation = {
+            date : date,
+            id : "33",
+            value : "1000",
+            confirm : "1",
+            categorie : [{ id:"0", value:"1000"}],
+            labels :  [{ id:"1", name:"tag"}]
+        };
+        DAVID = operation;
+        OPERATIONS.push(operation);
+        add_operation_in_stats(operation);
+        display_all_operations("#jie");
+        display_another_categorie(0);
+
+
+        $("#form-add").dialog("close");
+
+        function send_form_success(ret)
+        {
+            alert("OK");
+            return false;
+        }
+
+        function send_form_error(ret)
+        {
+            alert("Aïe!!!");
+            return false;
+        }
+
+    }
 }
 
-function test(){
-    $("#add-op").dialog("close");
-    return 0;
-}
 
+
+/*
+ * Filtre sur les opérations
+ */
 function show_operation_from_cat(cat_id) {
     var selector = generate_selector(cat_id);
     selector=selector.substring(0,selector.length-1);
@@ -196,6 +399,10 @@ function show_operation_from_cat(cat_id) {
     }
 }
 
+
+/*
+ * Pour afficher une catégorie en particulier
+ */
 function display_another_categorie(id) {
     var data = [];
     data[0] = generate_data_for_cat(id);
@@ -208,58 +415,10 @@ function display_another_categorie(id) {
     show_operation_from_cat(id);
 }
 
-function operation_html(op) {
-    var id = op.id;
-    var value = op.value;
-    var date = op.date;
-    var credit = (value > 0)?value:0;
-    var debit = (value > 0)?0:value*(-1);
-    var labels = op.labels;
-    var labels_str = '';
-    for(var j=0; j < labels.length; j++) {
-        labels_str += labels[j].name;
-    }
-    var $ul = $("<ul>");
-    for(var j in op.categorie) {
-        var cat = op.categorie[j];
-        //var name = CATEGORIES[cat.id].name;
-        var name = categorie2str(CATEGORIES[cat.id]);
-        var $li = $("<li cat=\""+cat.id+"\">");
-        $li.click( function () {
-                var id = $(this).attr("cat");
-                display_another_categorie(id)
-            });
-        $li.append(name+" : "+cat.value);
-        $ul.append($li);
-    }
 
-    var $tr = $("<tr>");
-    $tr.append($('<td>'+id+'</td>'));
-    $tr.append($('<td>'+date2str(date)+'</td>'));
-    $tr.append($('<td>'+credit+'</td>'));
-    $tr.append($('<td>'+debit+'</td>'));
-    $tr.append($('<td>').append($ul));
-    $tr.append($('<td>'+labels_str+'</td>'));
-    var $icon = add_icon("ui-icon-pencil");
-    $icon.click(function() {
-            alert("Edition de l'opération "+id);
-            });
-    $tr.append($('<td></td>').append($icon));
-    $icon = add_icon("ui-icon-closethick");
-    $tr.append($('<td></td>').append($icon));
-    return $tr;
-
-    function add_icon(name) {
-        var $div = $("<div class=\"ui-widget ui-state-default\"></div>");
-        $div.append("<div class=\"ui-icon "+name+"\"></div>");
-        $div.hover(
-                 function() { $(this).addClass('ui-state-hover'); }, 
-                 function() { $(this).removeClass('ui-state-hover'); }
-                );
-        return $div;
-    }
-}
-
+/*
+ * Pour générer les données pour ofc
+ */
 function generate_data_for_cat(id) {
     // extract the first and last date
     OPERATIONS.sort(sortByDate);
@@ -281,6 +440,9 @@ function generate_data_for_cat(id) {
     return data;
 }
 
+/*
+ * Générer les labels pour ofc
+ */
 function generate_labels() {
     // extract the first and last date
     OPERATIONS.sort(sortByDate);
@@ -298,6 +460,8 @@ function generate_labels() {
     return labels;
 }
 
+
+/* pour augementer une date d'un mois */
 function increase_date_by_month(date) {
     date.month++;
     if (date.month == 13) {
@@ -307,6 +471,7 @@ function increase_date_by_month(date) {
     return date;
 }
 
+/* Générer le menu des categories */
 function magic_cat_menu(id) {
     var $mc = $("#magic-cat");
     $mc.empty();
@@ -338,20 +503,20 @@ $("#magic-cat a").live("click", function() {
         var id = $(this).attr("href");
         display_another_categorie(id);
         return false;
-        });
+});
 
+
+
+/* 1er affichage
+ * TODO améliorer ca...
+ * */
 function display_stats() {
     var data = [];
     data[0] = generate_data_for_cat(0);
     var labels = generate_labels();
-    $("#ofc").ofc('add', {"values": data, "height":"250", "width":"800", 'labels':labels});
-
+    $("#ofc").ofc('add', {"values": data, "height":"250", "width":"100%", 'labels':labels, 'title':"Total"});
     /* Affichage du menu des catégories */
     magic_cat_menu(0);
-
-
-
-
 }
 
 /*
@@ -415,6 +580,7 @@ function extract_date(date) {
     return {'day':day, 'month':month, 'year':year};
 }
 
+
 function add_operation_in_stats(op) {
 
         var date = extract_date(op.date);
@@ -457,3 +623,17 @@ function warning(msg) {
     if (window.console && window.console.warn)
         window.console.warn(msg);
 };
+
+jQuery.fn.extend({ 
+   position : function() { 
+       obj = $(this).get(0); 
+       var curleft = obj.offsetLeft || 0; 
+       var curtop = obj.offsetTop || 0; 
+       while (obj = obj.offsetParent) { 
+                curleft += obj.offsetLeft 
+                curtop += obj.offsetTop 
+       } 
+       return {x:curleft,y:curtop}; 
+   } 
+}); 
+

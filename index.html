@@ -18,35 +18,38 @@
     <body>
         <div id="tabs">
             <ul>
-                <li><a href="#tabs-1">Tabs-1</a></li>
-                <li><a href="#tabs-2">Tabs-2</a></li>
+                <li><a href="#tabs-1">Compte</a></li>
+                <li><a href="#tabs-2">Paramètres</a></li>
             </ul>
+
             <div id="tabs-1">
-            <div id="magic-cat"></div>
-            <div id="cat-explorer"></div>
+                <div id="main">
+                    <div id="magic-cat"></div>
 
-                <div id="ofc"></div>
-                <button id="add-op">Add</button>
-                <div id="jie"></div>
+                    <div id="left">
+                        <button id="add-op">Add</button>
+                        <div id="jie"></div>
+                    </div>
+
+                    <div id="right">
+                        <div id="ofc"></div>
+                    </div>
+                    <div class="spacer"> </div>
+                </div>
+
+
             </div>
+
             <div id="tabs-2">
-            2
+            Pas encore de paramètres
             </div>
-        <div id="log"></div>
-
-
-
-
 
         </div>
 
         <!-- formulaire d'ajout d'une opération -->
         <div id="form-add">
-            <form id="form" name="form" action="scripts/add_operation.php" method="post" >
-            <fieldset>
-                <legend>Opération 1</legend>
+            <form id="form" name="form" action="api_xml/add_operation.php" method="post" >
                     <ol>
-                    <!--
                         <li>
                             <label for="op-type">Type :</label>
                             <ul>
@@ -54,25 +57,47 @@
                                 <li><input type="radio" id="op-type" name="op-type" value="credit" />Crédit</li>
                             </ul>
                         </li>
-                        -->
                         <li>
                             <label for="op-calendar">Date :</label>
                             <input autocomplete="off" type="text" size="10" value="" id="op-calendar" name="op-calendar"/>
                         </li>
                         <li>
-                            <label for="op-cat">Catégories :</label>
-                            <input type="text" id="op-cat-name" name="op-cat-name"/>
-                        </li>
-                        <li>
-                            <label for="op-cat">Somme :</label>
-                            <input type="text" id="op-cat-value" name="op-cat-value"/>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Catégories</th>
+                                        <th>Somme</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                <!--
+                                    <tr>
+                                        <td>
+                                            <input type="hidden" id="op-cat-id_1" name="op-cat-id_1"/>
+                                            <input type="text" id="op-cat-name_1" name="op-cat-name_1"/>
+                                        </td>
+                                        <td>
+                                            <input type="text" id="op-cat-value_1" name="op-cat-value_1" size="5"/>
+                                        </td>
+                                    </tr>
+                                    -->
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td>Total :</td>
+                                        <td></td>
+                                        <td><div class="ui-widget ui-state-default"><div class="ui-icon ui-icon-plusthick"></div></div></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
                         </li>
                         <li>
                             <label for="op-tags">Labels :</label>
                             <input type="text" id="op-tags" name="op-tags"/>
                         </li>
                     </ol>
-                </fieldset>
+                    <div id="tree"></div>
             </form>
         </div>
 
