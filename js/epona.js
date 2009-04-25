@@ -196,7 +196,17 @@ function show_operation_from_cat(cat_id) {
     }
 }
 
-
+function display_another_categorie(id) {
+    var data = [];
+    data[0] = generate_data_for_cat(id);
+    var name = categorie2str(CATEGORIES[id]);
+    /* update title */
+    magic_cat_menu(id);
+    /* update graph */
+    $("#ofc").ofc('update', {"values": data, "title":name});
+    /* update table */
+    show_operation_from_cat(id);
+}
 
 function operation_html(op) {
     var id = op.id;
@@ -216,12 +226,8 @@ function operation_html(op) {
         var name = categorie2str(CATEGORIES[cat.id]);
         var $li = $("<li cat=\""+cat.id+"\">");
         $li.click( function () {
-            var data = [];
-            var id = $(this).attr("cat");
-            data[0] = generate_data_for_cat(id);
-            var name = categorie2str(CATEGORIES[id]);
-            $("#ofc").ofc('update', {"values": data, "title":name});
-            show_operation_from_cat(id);
+                var id = $(this).attr("cat");
+                display_another_categorie(id)
             });
         $li.append(name+" : "+cat.value);
         $ul.append($li);
@@ -301,6 +307,38 @@ function increase_date_by_month(date) {
     return date;
 }
 
+function magic_cat_menu(id) {
+    var $mc = $("#magic-cat");
+    $mc.empty();
+    /* title */
+    var title = "<a href=\""+id+"\">"+CATEGORIES[id].name+"</a>";
+    var father_id = CATEGORIES[id].fatherId;
+    while(father_id != -1) {
+        var id_c = father_id;
+        var name = CATEGORIES[id_c].name;
+        if (id_c != 0) {
+            father_id =  CATEGORIES[id_c].fatherId;
+        } else {
+            father_id = -1
+        }
+        title = "<a href=\""+id_c+"\">"+name+"</a> >> "+title;
+    }
+    title = '<h1>'+title+'</h1>';
+    $mc.append(title);
+    var ul = "<ul>";
+    for(var i in CATEGORIES_BY_FATHER[id]) {
+        var id2 = CATEGORIES_BY_FATHER[id][i];
+        ul += "<li><a href=\""+id2+"\">"+CATEGORIES[id2].name+"</a></li>";
+    }
+    ul += "</ul>";
+    $mc.append(ul);
+}
+
+$("#magic-cat a").live("click", function() {
+        var id = $(this).attr("href");
+        display_another_categorie(id);
+        return false;
+        });
 
 function display_stats() {
     var data = [];
@@ -308,67 +346,9 @@ function display_stats() {
     var labels = generate_labels();
     $("#ofc").ofc('add', {"values": data, "height":"250", "width":"800", 'labels':labels});
 
-    /* cat explorer */
-    //var $ul = $("<ul>");
-    //construct_cat_list(0, $ul);
-    //$("#cat-explorer").append($ul);
-
-
-    /*
-    function construct_cat_list(id, $balise) {
-        var name = CATEGORIES[id].name;
-        var $li = $("<li cat=\""+id+"\">");
-        $li.append("<span>"+name+"</span>");
-        if (CATEGORIES_BY_FATHER[id]){
-            var $ul = $("<ul>");
-            for(var i in CATEGORIES_BY_FATHER[id]) {
-                construct_cat_list(CATEGORIES_BY_FATHER[id][i], $ul);
-            }
-            $li.append($ul);
-        }
-        $balise.append($li);
-    }*/
-
-    /* magic-cat */
+    /* Affichage du menu des catégories */
     magic_cat_menu(0);
 
-    function magic_cat_menu(id) {
-        var $mc = $("#magic-cat");
-        $mc.empty();
-        /* title */
-        var title = "<h1 cat=\""+id+"\">"+CATEGORIES[id].name+"</h1>";
-        var father_id = CATEGORIES[id].fatherId;
-        while(father_id != -1) {
-            var id_c = father_id;
-            var name = CATEGORIES[id_c].name;
-            if (id_c != 0) {
-                father_id =  CATEGORIES[id_c].fatherId;
-            } else {
-                father_id = -1
-            }
-            title = "<h1 cat=\""+id_c+"\">"+name+"</h1> >> "+title;
-        }
-
-
-
-        $mc.append(title);
-        var ul = "<ul>";
-        for(var i in CATEGORIES_BY_FATHER[id]) {
-            var id2 = CATEGORIES_BY_FATHER[id][i];
-            ul += "<li cat=\""+id2+"\">"+CATEGORIES[id2].name+"</li>";
-        }
-        ul += "</ul>";
-        $mc.append(ul);
-
-    }
-        $("#magic-cat li").live("click", function() {
-                var id = $(this).attr("cat");
-                magic_cat_menu(id);
-                });
-        $("#magic-cat h1").live("click", function() {
-                var id = $(this).attr("cat");
-                magic_cat_menu(id);
-                });
 
 
 
