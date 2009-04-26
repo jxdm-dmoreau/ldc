@@ -41,7 +41,7 @@ var DAVID;
  * @param id: id of the operation
  * @return operation object
  */
-function find_operation_from_id(id)
+function remove_operation_from_id(id)
 {
     var i = 0;
     var id_c;
@@ -49,7 +49,9 @@ function find_operation_from_id(id)
         id_c = OPERATIONS[i].id;
         i++;
     } while(id_c != id);
-    return OPERATIONS[i-1];
+    delete(OPERATIONS[i-1]);
+    OPERATIONS.sort(sortByDate);
+    OPERATIONS.length--;
 }
 
 
@@ -225,17 +227,19 @@ function display_all_operations(id) {
     function remove_operation(id, $tr)
     {
         /* AJAX: remove operation in server */
-        //$.get("api_xml/del_operation.php", {"id":id}, parse_result, "json");
+        $.get("api_xml/del_operation.php", {"id":id}, parse_result, "json");
         /* 1. update operations list */
         $tr.remove();
         /* update OPERATIONS variable */
-        //var op = find_operation_from_id(id);
-        alert(op.id);
+        remove_operation_from_id(id);
         /* update STATS variable */
+        init_stats();
         /* update graph */
+        display_another_categorie(0);
 
         function parse_result(json)
         {
+            // TODO faire quelque chose de plus constructif
             alert(json.result);
         }
     }
@@ -423,7 +427,6 @@ function init_form() {
             categorie : [{ id:"0", value:"1000"}],
             labels :  [{ id:"1", name:"tag"}]
         };
-        DAVID = operation;
         OPERATIONS.push(operation);
         add_operation_in_stats(operation);
         display_all_operations("#jie");
@@ -490,7 +493,6 @@ function filter_on_labels(label_id)
  * Pour afficher une catégorie en particulier
  */
 function display_another_categorie(id) {
-    debug("display_another_categorie("+id+")");
     var data = [];
     data[0] = generate_data_for_cat(id);
     var name = categorie2str(CATEGORIES[id]);
@@ -654,6 +656,7 @@ function sortByDate(opA, opB) {
 
 
 function init_stats() {
+    STATS = [];
     for(var i in OPERATIONS) {
         add_operation_in_stats(OPERATIONS[i]);
     }
