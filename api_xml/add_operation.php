@@ -62,36 +62,6 @@ exit(0);
 
 
 
-/*****************************************************************************/
-/*                           labels                                          */
-/*****************************************************************************/
-$ret = split(", ", $input_labels);
-$nb_labels = count($ret);
-for($i=0; $i<$nb_labels; $i++) {
-    /* creer les tags qui n'existent pas */
-    $query = "SELECT id FROM labels WHERE name='$ret[$i]'";
-    $result = $mysql->query($query);
-    $line = mysql_fetch_assoc($result);
-    if (isset($line['id'])) {
-        // le label existe
-        $label_id = $line['id'];
-    } else {
-        // le label n'existe pas
-        // on l'ajoute
-        $query = "INSERT INTO labels VALUES ('', '$ret[$i]')";
-        $result = $mysql->query($query);
-        // on récupère l'id
-        $query = "SELECT id FROM labels WHERE name='$ret[$i]'";
-        $result = $mysql->query($query);
-        $line = mysql_fetch_assoc($result);
-        $label_id = $line['id'];
-    }
-    /* on a l'id correspondant au tag, on peut ajouter la relatetion 
-       operation-tag */
-    $query = "INSERT INTO `op_labels` VALUES ('', '$op_id', '$label_id')";
-    $result = $mysql->query($query);
-}
-exit(0);
 
 
 

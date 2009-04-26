@@ -32,6 +32,25 @@ function eponaRegister()
 
 var DAVID;
 
+/******************************************************************************
+ * OPERATIONS variable
+ *****************************************************************************/
+
+/*
+ * Find a Operation from id
+ * @param id: id of the operation
+ * @return operation object
+ */
+function find_operation_from_id(id)
+{
+    var i = 0;
+    var id_c;
+    do {
+        id_c = OPERATIONS[i].id;
+        i++;
+    } while(id_c != id);
+    return OPERATIONS[i-1];
+}
 
 
 /******************************************************************************
@@ -160,6 +179,67 @@ function display_all_operations(id) {
     $div.append($Table);
 
 
+    /* 
+     * Events on oprations table
+     */
+
+    /* click sur les labels */
+    $("a.label").live("click",
+        function() {
+            var label_id = $(this).attr("href");
+            filter_on_labels(label_id);
+            return false;
+        }
+    );
+
+    /* click sur les categories */
+    $("a.cat").live("click",
+        function () {
+            var id = $(this).attr("href");
+            display_another_categorie(id)
+            return false;
+        }
+    );
+
+    /* click on delete */
+    $("#jie .ui-icon-closethick").live("click",
+        function() {
+            var id = $(this).parents('tr').children("td.op-id").text();
+            remove_operation(id, $(this).parents('tr'));
+            return false;
+        }
+    );
+
+    /* click on edit */
+    $("#jie .ui-icon-pencil").live("click",
+        function() {
+            alert("Not yet implemented");
+            return false;
+        }
+    );
+
+
+
+
+    /* remove a operation */
+    function remove_operation(id, $tr)
+    {
+        /* AJAX: remove operation in server */
+        //$.get("api_xml/del_operation.php", {"id":id}, parse_result, "json");
+        /* 1. update operations list */
+        $tr.remove();
+        /* update OPERATIONS variable */
+        //var op = find_operation_from_id(id);
+        alert(op.id);
+        /* update STATS variable */
+        /* update graph */
+
+        function parse_result(json)
+        {
+            alert(json.result);
+        }
+    }
+
 
     function operation_html(op) {
         var id = op.id;
@@ -170,33 +250,26 @@ function display_all_operations(id) {
         var labels = op.labels;
         var labels_str = '';
         for(var j=0; j < labels.length; j++) {
-            labels_str += labels[j].name;
+            labels_str += '<a class="label" href="'+labels[j].id+'">'+labels[j].name+'</a> ';
         }
-        var $ul = $("<ul>");
+        var ul = '<ul>';
         for(var j in op.categorie) {
             var cat = op.categorie[j];
             //var name = CATEGORIES[cat.id].name;
             var name = categorie2str(CATEGORIES[cat.id]);
-            var $li = $("<li cat=\""+cat.id+"\">");
-            $li.click( function () {
-                    var id = $(this).attr("cat");
-                    display_another_categorie(id)
-                });
-            $li.append(name+" : "+cat.value);
-            $ul.append($li);
+            var li = '<li><a class="cat" href=\"'+cat.id+'\">'+name+' : '+cat.value+'</a></li>';
+            ul += li;
         }
+        ul += '</ul>';
 
         var $tr = $("<tr>");
-        $tr.append($('<td>'+id+'</td>'));
-        $tr.append($('<td>'+date2str(date)+'</td>'));
-        $tr.append($('<td>'+credit+'</td>'));
-        $tr.append($('<td>'+debit+'</td>'));
-        $tr.append($('<td>').append($ul));
-        $tr.append($('<td>'+labels_str+'</td>'));
+        $tr.append($('<td class="op-id">'+id+'</td>'));
+        $tr.append($('<td class="op-date">'+date2str(date)+'</td>'));
+        $tr.append($('<td class="op-credit">'+credit+'</td>'));
+        $tr.append($('<td class="op-debit">'+debit+'</td>'));
+        $tr.append($('<td class="op-cat">').append(ul));
+        $tr.append($('<td class="op-labels">'+labels_str+'</td>'));
         var $icon = add_icon("ui-icon-pencil");
-        $icon.click(function() {
-                alert("Edition de l'opération "+id);
-                });
         $tr.append($('<td></td>').append($icon));
         $icon = add_icon("ui-icon-closethick");
         $tr.append($('<td></td>').append($icon));
@@ -383,7 +456,7 @@ function show_operation_from_cat(cat_id) {
     var selector = generate_selector(cat_id);
     selector=selector.substring(0,selector.length-1);
     /* hide everything that contains another cat */
-    $("tr:has(li[cat!="+cat_id+"])").hide();
+    $("tr:has(a.cat[href!="+cat_id+"])").hide();
     /* show right line */
     $(selector).show();
 
@@ -394,9 +467,22 @@ function show_operation_from_cat(cat_id) {
                 selector += generate_selector(CATEGORIES_BY_FATHER[cat_id][i]);
             }
         }
-        selector += "tr:has(li[cat="+cat_id+"]),";
+        selector += "tr:has(a.cat[href="+cat_id+"]),";
         return selector;
     }
+}
+
+
+/*
+ * Display all operations, stats... about a tag
+ */
+function filter_on_labels(label_id)
+{
+    /* filter on operations table */
+    $("tr:has(a.label[href!="+label_id+"])").hide();
+    $("tr:has(a.label[href="+label_id+"])").show();
+    /* filter on statistics */
+    // TODO
 }
 
 
@@ -404,6 +490,7 @@ function show_operation_from_cat(cat_id) {
  * Pour afficher une catégorie en particulier
  */
 function display_another_categorie(id) {
+    debug("display_another_categorie("+id+")");
     var data = [];
     data[0] = generate_data_for_cat(id);
     var name = categorie2str(CATEGORIES[id]);

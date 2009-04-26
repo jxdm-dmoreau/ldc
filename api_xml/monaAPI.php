@@ -10,7 +10,7 @@ class monaAPI {
 
     private $mysql;
     private $logger;
-    const DEBUG_LEVEL = 0;
+    const DEBUG_LEVEL = 255;
 
     function __construct() {
         $this->logger = new Logger('monaAPI', monaAPI::DEBUG_LEVEL);
@@ -178,7 +178,31 @@ class monaAPI {
 		return $op_id;        
     }
    
-    
+     /*
+     * Delete une opération dans la base 
+     */
+    function removeOperation($id) {
+		$query = "DELETE FROM operations WHERE id = '$id'";
+		$this->logger->debug($query);
+		$ret = $this->mysql->query($query);
+		if ($ret == FALSE) {
+			return FALSE;
+		}
+		$query = "DELETE FROM op_cat WHERE op_id = $id";
+		$this->logger->debug($query);
+		$ret = $this->mysql->query($query);
+		if ($ret == FALSE) {
+			return FALSE;
+		}		
+		$query = "DELETE FROM op_labels WHERE op_id = $id";
+		$this->logger->debug($query);
+
+		$ret = $this->mysql->query($query);
+		if ($ret == FALSE) {
+			return FALSE;
+		}
+		return TRUE;		
+	}   
 
 }
 ?>

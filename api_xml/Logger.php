@@ -4,21 +4,27 @@ class Logger {
 
     private $class = "undefined";
     private $level = 0;
+    private $handle;
 
     function __construct($name, $level) {
         $this->class = "$name";
         $this->level = $level;
+        $this->handle = fopen('server.log', 'w+');        
+    }
+    
+    function __destruct() {
+		if ($this->handle)
+			fclose($this->handle);
     }
 
     private function display($level, $msg) {
         if ($level > $this->level) {
             return;
         }
-        print "<p>";
-        print "[$this->class] ";
-        print "$msg";
-        print "</p>";
-        print "\n";
+        if ($this->handle)
+			fwrite($this->handle, "[$this->class] $msg\n");
+        else
+			print "[$this->class] $msg";
     }
 
     function debug($msg) {
