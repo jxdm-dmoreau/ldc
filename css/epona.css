@@ -142,3 +142,14 @@ fieldset legend {
 	height: 200px;
 }
 
+/* FORMULAIRE */
+#op-calendar {
+	border: 1px solid #E8EFF4;
+	background-color: white;
+}
+li.calendar img{
+	cursor: pointer;
+}
+.error {
+	border: 1px solid red;
+}

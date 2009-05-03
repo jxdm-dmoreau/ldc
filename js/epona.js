@@ -295,9 +295,13 @@ function display_all_operations(id) {
     }
 
 
-/*
- * initialiser le formulaire
- */
+
+
+/* ****************************************************************************
+ *                     FORMULAIRE
+ * ***************************************************************************/
+
+/* Init the form. Called once! */
 function init_form() {
     
     /* formulaire */
@@ -310,7 +314,7 @@ function init_form() {
                                 width: 450,
                                 height: 300});
 
-    $("#op-calendar").datepicker({dateFormat: 'dd-mm-yy'});
+    $("#op-calendar").datepicker({dateFormat: 'dd-mm-yy', buttonImage: 'images/calendar.gif', buttonImageOnly: true, showOn: 'button'});
 
     /* creer les catégories */
     var list = '';
@@ -354,7 +358,14 @@ function init_form() {
             add_row($("#form-add tbody"));
     });
 
-    $("#add-op").click( function() { $("#form-add").dialog("open"); });
+    /* ajout d'une opération */
+    $("#add-op").click(
+        function() {
+            $("#form-add").dialog("open");
+        }
+    );
+
+
 
     /* FONCTIONS */
 
@@ -367,7 +378,7 @@ function init_form() {
         row += '<input type="text" id="" name="" class="need-tree op-cat-name" />';
         row += '</td>';
         row += '<td>';
-        row += '<input type="text" id="op-cat-value_'+nb_row+'" name="op-cat-value_'+nb_row+'"/>';
+        row += '<input type="text" id="op-cat-value_'+nb_row+'" name="op-cat-value_'+nb_row+'" class="op-cat-value"/>';
         row += '</td>';
         var $td = $('<td></td>');
         var $icon = add_icon("ui-icon-closethick");
@@ -402,7 +413,72 @@ function init_form() {
 
 
     function send_form(){
+        $(".error").removeClass("error");
         /* TODO vérification du formulaire */
+
+        /* retrieve information from form */
+
+        // type
+        var type = $("#op-type").val();
+
+        // date
+        var date = $("#op-calendar").val();
+        if (date == '') {
+            $("li.calendar").addClass("error");
+            warning("date invalide");
+        }
+
+        //cats
+        var cats = [];
+        $("#form table tbody tr").each(
+            function() {
+                // retrieve cat info
+                var cat_id = $(this).children().children(".op-cat-id").val();
+                var cat_name = $(this).children().children(".op-cat-name").val();
+                var cat_value = parseFloat($(this).children().children(".op-cat-value").val());
+                // test on values
+                if (cat_id == '' || cat_name == '') {
+                    $(this).children().children(".op-cat-name").addClass("error");
+                }
+                if (isNaN(cat_value)) {
+                    $(this).children().children(".op-cat-value").addClass("error");
+                }
+                // if OK, construct object
+                if ($(this).children().children(".error").length == 0) {
+                    var cat = { 'id' : cat_id, 'value' : cat_value };
+                    debug("Cat.: "+cat);
+                    // add object in list
+                    cats.push(cat);
+                }
+            }
+        );
+
+        // labels
+        var labels = $("#op-tags").val();
+        var tmp = labels.split(/, /);
+        labels = [];
+        nb = 0;
+        for(i in tmp) {
+            labels[nb] = {'name': tmp[i]};
+        }
+
+
+        /* debug */
+        debug("type="+type);
+        debug("date="+date);
+        for(i in cats) {
+            debug("cat id:"+cats[i].id+" value:"+cats[i].value);
+        }
+        for(i in labels) {
+            debug("labels: "+labels[i].name);
+        }
+
+        /* stop if error in form */
+        if ($(".error").length >= 1) {
+            return false;
+        }
+
+
         var $form = $("#form");
         var s = $form.serialize(); 
         $.ajax({ 
@@ -447,8 +523,11 @@ function init_form() {
             return false;
         }
 
+
     }
 }
+
+/***************** FIN DU FORMULAIRE *****************************************/
 
 
 
@@ -499,7 +578,8 @@ function display_another_categorie(id) {
     /* update title */
     magic_cat_menu(id);
     /* update graph */
-    $("#ofc").ofc('update', {"values": data, "title":name});
+    var labels = generate_labels();
+    $("#ofc").ofc('update', {"values": data, "title":name, "labels": labels});
     /* update table */
     show_operation_from_cat(id);
 }

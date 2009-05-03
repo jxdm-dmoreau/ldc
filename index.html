@@ -79,18 +79,19 @@
         <div id="form-add">
             <form id="form" name="form" action="api_xml/add_operation.php" method="post" >
                     <ol>
-                        <li>
+                        <li class="type">
                             <label for="op-type">Type :</label>
                             <ul>
                                 <li><input type="radio" id="op-type" name="op-type" value="debit" checked />Débit<br /></li>
                                 <li><input type="radio" id="op-type" name="op-type" value="credit" />Crédit</li>
                             </ul>
                         </li>
-                        <li>
+                        <li class="calendar">
                             <label for="op-calendar">Date :</label>
-                            <input autocomplete="off" type="text" size="10" value="" id="op-calendar" name="op-calendar"/>
+                            <input autocomplete="off" type="text" size="10" value="" id="op-calendar" name="op-calendar" disabled/>
                         </li>
-                        <li>
+                        <li class="cats">
+                            <label for="op-cat-id_1">Catégories</label>
                             <table>
                                 <thead>
                                     <tr>
