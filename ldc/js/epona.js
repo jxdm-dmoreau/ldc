@@ -71,7 +71,7 @@ function epona_init() {
         /* get operations list */
         $.ajax({
             type: "GET",
-            url: "api_xml/api_operations.php",
+            url: "ldc/api_xml/api_operations.php",
             success: parse_xml,
             async: false,
             error : function (ret) { $("#log").append(ret); return false; }
@@ -118,7 +118,7 @@ function epona_init() {
         $.ajax({
             type: "GET",
             async: false,
-            url: "api_xml/api_cat.php?op=get",
+            url: "ldc/api_xml/api_cat.php?op=get",
             success: parse_xml,
             error : function (ret) { $("#log").append(ret); return false; }
         });
@@ -227,7 +227,7 @@ function display_all_operations(id) {
     function remove_operation(id, $tr)
     {
         /* AJAX: remove operation in server */
-        $.get("api_xml/del_operation.php", {"id":id}, parse_result, "json");
+        $.get("ldc/api_xml/del_operation.php", {"id":id}, parse_result, "json");
         /* 1. update operations list */
         $tr.remove();
         /* update OPERATIONS variable */
