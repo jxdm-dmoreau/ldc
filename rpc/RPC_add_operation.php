@@ -22,20 +22,17 @@ if (!isset($_POST['json']) ) {
 $json = str_replace('\\', '', $_POST['json']);
 debug($json);
 $json = json_decode($json);
+$json2 = clone $json;
+unset($json2->cats);
+unset($json2->labels);
 
 // connection a la base de données
 $link = mysql_connect(LDC_MYSQL_HOST, LDC_MYSQL_USER, LDC_MYSQL_PASSWD);
 mysql_select_db(LDC_MYSQL_DB, $link);
 		
-$json_date        = mysql_real_escape_string($json->date);
-$json_value       = mysql_real_escape_string($json->value);
-$json_description = mysql_real_escape_string($json->description);
-$json_account     = mysql_real_escape_string($json->account);
-$json_recurring   = mysql_real_escape_string($json->recurring);
-$json_confirm     = mysql_real_escape_string($json->confirm);
-	
 
-$json->id = MYSQL_operation_add($json_date, $json_value, $json_description, $json_account, $json_recurring, $json_confirm);	
+$json2 = MYSQL_operation_add($json2);	
+$json->id = $json2->id;
 
 foreach($json->cats as $cat) {
     MYSQL_opcat_add($json->id, $cat->id, $cat->value);

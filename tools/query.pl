@@ -5,26 +5,26 @@ use LWP::UserAgent;
 use JSON;
 
 
-$HTTP_SERVER         = 'http://192.168.1.6:3333';
+$HTTP_SERVER         = 'http://192.168.1.6/ldc';
 $RPC_PATH            = '/rpc/';
-$RPC_ADD_OPEATION    = 'RPC_add_operation.php';
-$RPC_UPDATE_OPEATION = 'RPC_update_operation.php';
-$RPC_DEL_OPEATION    = 'RPC_del_operation.php';
-$RPC_GET_OPEATION    = 'RPC_get_operation.php';
+$RPC_ADD_OPERATION    = 'RPC_add_operation.php';
+$RPC_UPDATE_OPERATION = 'RPC_update_operation.php';
+$RPC_DEL_OPERATION    = 'RPC_del_operation.php';
+$RPC_GET_OPERATION    = 'RPC_get_operation.php';
 
-$URL_ADD_OPERATION    = $HTTP_SERVER.$RPC_PATH.$RPC_ADD_OPEATION;
-$URL_UPDATE_OPERATION = $HTTP_SERVER.$RPC_PATH.$RPC_UPDATE_OPEATION;
-$URL_DEL_OPERATION    = $HTTP_SERVER.$RPC_PATH.$RPC_DEL_OPEATION;
-$URL_GET_OPERATION    = $HTTP_SERVER.$RPC_PATH.$RPC_GET_OPEATION;
+$RPC_ADD_CAT         = 'RPC_add_cat.php';
+$RPC_UPDATE_CAT      = 'RPC_update_cat.php';
+$RPC_DEL_CAT         = 'RPC_del_cat.php';
+$RPC_GET_CAT         = 'RPC_get_cat.php';
 
 
 
 sub send_json
 {
     my ($json, $url) = @_;
-    print "==> $json\n";
+    print "\n[$url]\n ==> $json\n";
     my $ua = LWP::UserAgent->new;
-    $ret = $ua->request(POST "$url", [json   => $json ]);
+    $ret = $ua->request(POST "$HTTP_SERVER"."$RPC_PATH"."$url", [json   => $json ]);
     if ($ret->is_success) {
 	return $ret->content;
     }
@@ -47,6 +47,9 @@ sub check_json
 $hash_json_orig = {
     date        => '2009-03-03',
     value       => 15,
+    account     => 1,
+    confirm     => 1,
+    recurring   => 0,
     description => "coucou c\'est une description",
     confirm     => 1,
     cats        => [ { 'id' => 1, value => 12 },
@@ -55,7 +58,7 @@ $hash_json_orig = {
     };
 
 $json      = to_json $hash_json_orig;
-$json      = send_json $json, $URL_ADD_OPERATION;
+$json      = send_json $json, $RPC_ADD_OPERATION;
 $hash_json = check_json $json;
 
 
@@ -63,7 +66,7 @@ $hash_json = check_json $json;
 $op_id = $hash_json->{'id'};
 $hash_json = { id => $op_id };
 $json      = to_json $hash_json;
-$json      = send_json $json, $URL_GET_OPERATION;
+$json      = send_json $json, $RPC_GET_OPERATION;
 $hash_json = check_json $json;
 
 print STDERR "ERROR in date\n" if $hash_json_orig->{'date'} ne $hash_json->{'date'};
@@ -91,14 +94,14 @@ $hash_json_orig = {
     };
 
 $json      = to_json $hash_json_orig;
-$json      = send_json $json, $URL_UPDATE_OPERATION;
+$json      = send_json $json, $RPC_UPDATE_OPERATION;
 $hash_json = check_json $json;
 
 
 # on récupère l'opération modifiée
 $hash_json = { id => $id };
 $json      = to_json $hash_json;
-$json      = send_json $json, $URL_GET_OPERATION;
+$json      = send_json $json, $RPC_GET_OPERATION;
 $hash_json = check_json $json;
 
 print STDERR "ERROR in date\n" if $hash_json_orig->{'date'} ne $hash_json->{'date'};
@@ -115,8 +118,30 @@ print STDERR "ERROR in labels 0\n" if ($hash_json_orig->{'labels'}->[1] ne $hash
 # suppresion de l'opération
 $hash_json = { id => $op_id };
 $json      = to_json $hash_json;
-$json      = send_json $json, $URL_DEL_OPERATION;
+$json      = send_json $json, $RPC_DEL_OPERATION;
 $hash_json = check_json $json;
 
+
+################################################################################
+# CATEGORIES
+################################################################################
+
+$hash_json = { father_id => 1, name=>'pneu', color=>"#1234" };
+$json      = to_json $hash_json;
+$json      = send_json $json, $RPC_ADD_CAT;
+$hash_json = check_json $json;
+
+$id = $hash_json->{'id'};
+
+$hash_json = { id => $id, father_id => 2, name=>'pneux', color=>"#12345" };
+$json      = to_json $hash_json;
+$json      = send_json $json, $RPC_UPDATE_CAT;
+$hash_json = check_json $json;
+exit 0;
+
+$hash_json = { id => $id };
+$json      = to_json $hash_json;
+$json      = send_json $json, $RPC_DEL_CAT;
+$hash_json = check_json $json;
 
 exit 0;

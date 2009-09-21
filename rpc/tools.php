@@ -36,5 +36,4 @@ function display($line) {
 
 
 
-
 ?>

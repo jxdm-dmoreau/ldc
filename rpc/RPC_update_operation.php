@@ -29,11 +29,7 @@ $link = mysql_connect(LDC_MYSQL_HOST, LDC_MYSQL_USER, LDC_MYSQL_PASSWD);
 mysql_select_db(LDC_MYSQL_DB, $link);
 		
 
-$json_id  = mysql_real_escape_string($json->id);
-$op = MYSQL_operation_get($json_id);
-if ($op == false) {
-    error("Operation $json_id not found");
-}
+$op = MYSQL_operation_get($json);
 
 /* update fields */
 if (isset($json->date)) {
@@ -54,7 +50,7 @@ if (isset($json->recurring)) {
 if (isset($json->confirm)) {
     $op->confirm = mysql_real_escape_string($json->confirm);
 }
-MYSQL_operation_update($op->id, $op->date, $op->value, $op->description, $op->account, $op->recurring, $op->confirm);
+$op = MYSQL_operation_update($op);
 
 
 
@@ -81,8 +77,8 @@ if (isset($json->labels)) {
 }
 
 
-$response->result = true;
-$ret = json_encode($response);
+$op->result = true;
+$ret = json_encode($op);
 debug($ret);
 print $ret;
 

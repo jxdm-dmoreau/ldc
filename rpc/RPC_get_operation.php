@@ -20,17 +20,8 @@ $json = json_decode($json);
 $link = mysql_connect(LDC_MYSQL_HOST, LDC_MYSQL_USER, LDC_MYSQL_PASSWD);
 mysql_select_db(LDC_MYSQL_DB, $link);
 		
-$json_id = mysql_real_escape_string($json->id);
 
-
-$op = MYSQL_operation_get($json_id);
-if ($op == false) {
-    $response->result = false; 
-    $ret = json_encode($response);
-    debug($ret);
-    print $ret;
-    exit(0);
-}
+$op = MYSQL_operation_get($json);
 
 $op_label = MYSQL_oplabel_get_from_op($op->id);
 $op_cat   = MYSQL_opcat_get_from_op($op->id);

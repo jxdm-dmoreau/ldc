@@ -9,153 +9,160 @@ require_once "tools.php";
 ********************************************************************************/
 function my_query($query) {
     debug($query);
-    $ret = mysql_query($query);
-    if (!$ret) {
-        error(mysql_error());
-    }
+    MYSQL_ASSERT($ret = mysql_query($query), mysql_error());
     return $ret;
 }
 
 
+function MYSQL_ASSERT($bool, $msg)
+{
+    if (!$bool) {
+	mysql_close();
+	exit($msg);
+    }
+}
 
 /********************************************************************************
 * OPEARIONS
 ********************************************************************************/
-function MYSQL_operation_add($date, $value, $description, $account, $recurring, $confirm)
+function MYSQL_operation_add($o)
 {
+    MYSQL_ASSERT(isset($o->date),        "date not defined");
+    MYSQL_ASSERT(isset($o->value),       "value not defined");
+    MYSQL_ASSERT(isset($o->account),     "account not defined");
+    MYSQL_ASSERT(isset($o->recurring),   "recurring not defined");
+    MYSQL_ASSERT(isset($o->description), "description not defined");
+    MYSQL_ASSERT(isset($o->confirm),     "confirm not defined");
+
     $query = "INSERT INTO operations VALUES (
 		'',
-		'$date',
-		'$value',
-		'$description',
-		'$account',
-		'$recurring',
-		'$confirm'
+		'".mysql_real_escape_string($o->date)."',
+		'".mysql_real_escape_string($o->value)."',
+		'".mysql_real_escape_string($o->description)."',
+		'".mysql_real_escape_string($o->account)."',
+		'".mysql_real_escape_string($o->recurring)."',
+		'".mysql_real_escape_string($o->confirm)."'
 	)";
     my_query($query);
-    $id = MYSQL_operation_get_id($date, $value, $description, $account, $recurring, $confirm);
-    if ($id == -1) {
-	error("Cannot retrieve operation");
-    }
-    return $id;
-}
-
-function MYSQL_operation_get($id)
-{
-    $query = "SELECT * from `operations` WHERE `id` = '$id'";
-    $line = mysql_fetch_assoc(my_query($query));
-    if ($line == false) {
-	return false;
-    }
-    $op->id = $id;
-    $op->date = $line['date'];
-    $op->value = $line['value'];
-    $op->description = $line['description'];
-    $op->account = $line['account'];
-    $op->reccurring = $line['recurring'];
-    $op->confirm = $line['confirm'];
-    return $op;
-}
-
-function MYSQL_operation_update($id, $date, $value, $desc, $account, $recurring, $confirm)
-{
-    $query = "UPDATE `operations` SET
-	`date` = '$date',
-	`value` = '$value',
-	`description` = '$desc',
-	`account` = '$account',
-	`recurring` = '$recurring',
-    	`confirm` = '$confirm'
-	WHERE `id` = $id";
-    my_query($query);
-}
-
-function MYSQL_operation_del($id)
-{
-    $query = "DELETE FROM `operations` WHERE `id` = $id LIMIT 1";
-    my_query($query);
+    return MYSQL_operation_get($o);
 }
 
 
-function MYSQL_operation_get_id($date, $value, $description, $account, $recurring, $confirm)
-{
-    $query = "SELECT id FROM operations WHERE
-	    date = '$date' AND
-	    value = '$value' AND
-	    description = '$description' AND
-	    account = '$account' AND
-	    recurring = '$recurring' AND
-	    confirm = '$confirm' LIMIT 1";
-    $ret = my_query($query);
 
-    $nb = mysql_num_rows($ret);
-    if ($nb == 1) {
-	$line = mysql_fetch_assoc($ret);
-	debug("Operation ".$line['id']." found");
-	return $line['id'];
+function MYSQL_operation_get($o)
+{
+    /* construct query */
+    $query = "SELECT * FROM `operations` WHERE ";
+    if (isset($o->id)) {
+	$query .= "`id` = '".mysql_real_escape_string($o->id)."'";
     } else {
-	debug("Operation not found nb=$nb");
-	return -1;
+	MYSQL_ASSERT(isset($o->date),        "date not defined");
+	MYSQL_ASSERT(isset($o->value),       "value not defined");
+	MYSQL_ASSERT(isset($o->account),     "account not defined");
+	MYSQL_ASSERT(isset($o->recurring),   "recurring not defined");
+	MYSQL_ASSERT(isset($o->description), "description not defined");
+	MYSQL_ASSERT(isset($o->confirm),     "confirm not defined");
+	$query .= "`date` = '".mysql_real_escape_string($o->date)."' AND ";
+	$query .= "`value` = '".mysql_real_escape_string($o->value)."' AND";
+	$query .= "`account` = '".mysql_real_escape_string($o->account)."' AND";
+	$query .= "`recurring` = '".mysql_real_escape_string($o->recurring)."' AND";
+	$query .= "`description` = '".mysql_real_escape_string($o->description)."' AND";
+	$query .= "`confirm` = '".mysql_real_escape_string($o->confirm)."'";
     }
+    $query .= " ORDER BY `operations`.`id` DESC";
+
+    /* execute query */
+    $ret = my_query($query);
+    $line = mysql_fetch_assoc($ret);
+    MYSQL_ASSERT($line, "mysql_fetch_assoc()");
+
+    /* return result in object */
+    return (object) $line;
+}
+
+function MYSQL_operation_update($o)
+{
+    MYSQL_ASSERT(isset($o->id), "id not defined");
+    /* construct query */
+    $query = "UPDATE `operations` SET ";
+    if (isset($o->date)) {
+	$query .= "`date` = '$o->date', ";
+    }
+    if (isset($o->description)) {
+	$query .= "`description` = '$o->description', ";
+    }
+    if (isset($o->value)) {
+	$query .= "`value` = '$o->value' ,";
+    }
+    if (isset($o->account)) {
+	$query .= "`account` = '$o->account', ";
+    }
+    if (isset($o->recurring)) {
+	$query .= "`recurring` = '$o->recurring', ";
+    }
+    if (isset($o->confirm)) {
+	$query .= "`confirm` = '$o->confirm' ,";
+    }
+    $query = substr($query, 0, strlen($query) - 1);
+    my_query($query);
+    return $o;
+}
+
+function MYSQL_operation_del($o)
+{
+    $query = "DELETE FROM `operations` WHERE `id` = ".mysql_real_escape_string($o->id);
+    my_query($query);
+    return $o;
 }
 
 
 /********************************************************************************
 * CATEGORIES
 ********************************************************************************/
-function MYSQL_cat_add($father_id, $name, $color)
+function MYSQL_cat_add($o)
 {
-    $query = "INSERT INTO `cat` VALUES ('', '$father_id', '$name', '$color')";
+    $query = "INSERT INTO `cat` VALUES ('', '$o->father_id', '$o->name', '$o->color')";
     my_query($query);
-    $id = MYSQL_cat_get_from($father_id, $name);
-    if ($id == -1) {
-	error("Cannot retrieve cat id");
-    }
-    return $id;
+    return MYSQL_cat_get($o);
 }
 
-function MYSQL_cat_get_from($father_id, $name)
-{
-    $query = "SELECT id FROM `cat` WHERE name='$name'AND father_id='$father_id' LIMIT 1";
-    $ret = my_query($query);
-    $nb = mysql_num_rows($ret);
-    if ($nb == 1) {
-	$line = mysql_fetch_assoc($ret);
-	return $line['id'];
-    } else {
-	debug("cat $name not found!");
-	return -1;
-    }
-}
 
-function MYSQL_cat_update($id, $father_id, $name)
+function MYSQL_cat_update($o)
 {
     $query = "UPDATE `cat` SET
-    	`name` = '$name',
-	`father_id` = '$father_id'
-	WHERE `id` = $id";
+    	`name`      = '$o->name',
+	`father_id` = '$o->father_id',
+	`color`     = '$o->color'
+	WHERE `id`  = '$o->id'";
     my_query($query);
+    return $o;
 }
 
-function MYSQL_cat_del($id)
+function MYSQL_cat_del($o)
 {
-    $query = "DELETE FROM `cat` WHERE `id` = '$id'";
+    $query = "DELETE FROM `cat` WHERE `id` = '$o->id'";
     my_query($query);
+    return $o;
 }
 
-function MYSQL_cat_get($id)
+function MYSQL_cat_get($o)
 {
-    $query = "SELECT * FROM `cat` WHERE id='$id'";
+    /* construct query */
+    $query = "SELECT * FROM `cat` WHERE ";
+    foreach($o as $attr => $value) {
+	$attr = mysql_real_escape_string("$attr");
+	$value = mysql_real_escape_string("$value");
+	$query .= " `$attr` = '$value' AND ";
+    }
+    $query = substr($query, 0, strlen($query) - 4);
+
+    /* execute query */
     $ret = my_query($query);
     $line = mysql_fetch_assoc($ret);
-    if ($line == false) {
-	return false;
-    }
-    $cat->id = $id;
-    $cat->father_id = $line['father_id'];
-    $cat->name = $line['name'];
-    $cat->color = $line['color'];
-    return $cat;
+    MYSQL_ASSERT($line, "mysql_fetch_assoc()");
+
+    /* return result in object */
+    return (object) $line;
 }
 
 /********************************************************************************
