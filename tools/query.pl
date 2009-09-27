@@ -7,46 +7,35 @@ use JSON;
 
 $HTTP_SERVER         = 'http://192.168.1.6/ldc';
 $RPC_PATH            = '/rpc/';
-$RPC_ADD_OPERATION    = 'RPC_add_operation.php';
-$RPC_UPDATE_OPERATION = 'RPC_update_operation.php';
-$RPC_DEL_OPERATION    = 'RPC_del_operation.php';
-$RPC_GET_OPERATION    = 'RPC_get_operation.php';
-
-$RPC_ADD_CAT         = 'RPC_add_cat.php';
-$RPC_UPDATE_CAT      = 'RPC_update_cat.php';
-$RPC_DEL_CAT         = 'RPC_del_cat.php';
-$RPC_GET_CAT         = 'RPC_get_cat.php';
+$RPC_FILE            = 'ldc.php';
 
 
 
 sub send_json
 {
-    my ($json, $url) = @_;
-    print "\n[$url]\n ==> $json\n";
+    my ($action, $json) = @_;
+    print "\n[$action]\n ==> $json\n";
     my $ua = LWP::UserAgent->new;
-    $ret = $ua->request(POST "$HTTP_SERVER"."$RPC_PATH"."$url", [json   => $json ]);
+    $ret = $ua->request(POST "$HTTP_SERVER"."$RPC_PATH"."$RPC_FILE", [action => $action, json   => $json ]);
     if ($ret->is_success) {
+	print $ret->content."\n";
 	return $ret->content;
     }
     print STDERR $ret->status_line, "\n";
 }
 
-sub check_json
-{
-    my ($json) = @_;
-    print "<== $json\n";
-    my $hash_json = from_json $json;
-    if ($hash_json->{'result'} eq 'true') {
-	return $hash_json;
-    }
-    print STDERR "ERROR - $json\n";
-    exit 1;
-}
 
-# ajouter une opération
+
+
+
+
+###############################################################################
+# OPERAIONS
+###############################################################################
+
+# add_operation
 $hash_json_orig = {
     date        => '2009-03-03',
-    value       => 15,
     account     => 1,
     confirm     => 1,
     recurring   => 0,
@@ -57,11 +46,174 @@ $hash_json_orig = {
     labels      => [ "leader-price", "carrefour" ]
     };
 
-$json      = to_json $hash_json_orig;
-$json      = send_json $json, $RPC_ADD_OPERATION;
-$hash_json = check_json $json;
+$json_to_send  = to_json $hash_json_orig;
+$json_rcv      = send_json 'add_operation', $json_to_send;
+$json_decoded  = from_json $json_rcv;
+if (!$json_decoded->{'id'}) {
+    exit(1);
+}
+
+# get_operation
+$get_json = {
+    id => $json_decoded->{'id'}
+};
+$json_to_send  = to_json $get_json;
+$json_rcv      = send_json 'get_operation', $json_to_send;
+$json_decoded  = from_json $json_rcv;
+
+if ($hash_json_orig->{'date'} ne $json_decoded->{'date'}) {
+    print STDERR "ERROR in date\n";
+    exit(1);
+}
+if ($hash_json_orig->{'description'} ne $json_decoded->{'description'}) {
+    print STDERR "ERROR in description\n";
+    exit(1);
+}
+if ($hash_json_orig->{'confirm'} ne $json_decoded->{'confirm'}) {
+    print STDERR "ERROR in confirm\n";
+    exit(1);
+}
+
+if ($hash_json_orig->{'labels'}->[0] ne $json_decoded->{'labels'}->[0] && $hash_json_orig->{'labels'}->[0] ne $json_decoded->{'labels'}->[1]) {
+    print STDERR "ERROR in labels \n";
+    exit(1);
+}
+if ($hash_json_orig->{'labels'}->[1] ne $json_decoded->{'labels'}->[0] && $hash_json_orig->{'labels'}->[1] ne $json_decoded->{'labels'}->[1]) {
+    print STDERR "ERROR in labels \n";
+	exit(1);
+}
+if ($hash_json_orig->{'cats'}->[0]->{'id'} ne $json_decoded->{'cats'}->[0]->{'id'} && $hash_json_orig->{'cats'}->[0]->{'id'} ne $json_decoded->{'cats'}->[1]->{'id'}) {
+    print STDERR "ERROR in cats \n";
+    exit(1);
+}
+if ($hash_json_orig->{'cats'}->[0]->{'value'} ne $json_decoded->{'cats'}->[0]->{'value'} && $hash_json_orig->{'cats'}->[0]->{'value'} ne $json_decoded->{'cats'}->[1]->{'value'}) {
+    print STDERR "ERROR in cats \n";
+    exit(1);
+}
+if ($hash_json_orig->{'description'} ne $json_decoded->{'description'}) {
+    print STDERR "ERROR in description";
+    exit(1);
+}
+
+# update_operation
+$id = $json_decoded->{'id'};
+$hash_json_orig = {
+    id          => $id,
+    date        => '2009-01-21',
+    account     => 2,
+    confirm     => 0,
+    recurring   => 1,
+    description => "Bientôt les vacances",
+    confirm     => 0,
+    cats        => [ { 'id' => 3, value => 33 } ],
+    labels      => [ "jie" ]
+    };
+
+$json_to_send  = to_json $hash_json_orig;
+$json_rcv      = send_json 'update_operation', $json_to_send;
+if ($json_rcv != 1) {
+    print STDERR "Erreur del";
+    exit(1);
+}
 
 
+# get_operation
+$get_json = {
+    id => $id
+};
+$json_to_send  = to_json $get_json;
+$json_rcv      = send_json 'get_operation', $json_to_send;
+$json_decoded  = from_json $json_rcv;
+
+if ($hash_json_orig->{'date'} ne $json_decoded->{'date'}) {
+    print STDERR "ERROR in date\n";
+    exit(1);
+}
+if ($hash_json_orig->{'description'} ne $json_decoded->{'description'}) {
+    print STDERR "ERROR in description\n";
+    exit(1);
+}
+if ($hash_json_orig->{'confirm'} ne $json_decoded->{'confirm'}) {
+    print STDERR "ERROR in confirm\n";
+    exit(1);
+}
+
+if ($hash_json_orig->{'labels'}->[0] ne $json_decoded->{'labels'}->[0]) {
+    print STDERR "ERROR in labels \n";
+    exit(1);
+}
+if ($hash_json_orig->{'cats'}->[0]->{'id'} ne $json_decoded->{'cats'}->[0]->{'id'}) {
+    print STDERR "ERROR in cats \n";
+    exit(1);
+}
+if ($hash_json_orig->{'description'} ne $json_decoded->{'description'}) {
+    print STDERR "ERROR in description";
+    exit(1);
+}
+
+# del_operation
+$json_to_send  = to_json $get_json;
+$json_rcv      = send_json 'del_operation', $json_to_send;
+if ($json_rcv != 1) {
+    print STDERR "Erreur del";
+    exit(1);
+}
+
+
+
+#get_operations
+undef $hash_json_orig;
+$hash_json_orig = {
+    date        => '2009-01-21',
+    account     => 2,
+    confirm     => 0,
+    recurring   => 1,
+    description => "Bientôt les vacances",
+    confirm     => 0,
+    cats        => [ { 'id' => 3, value => 33 } ],
+    labels      => [ "jie" ]
+    };
+$json_to_send  = to_json $hash_json_orig;
+$json_rcv      = send_json 'add_operation', $json_to_send;
+$json_decoded  = from_json $json_rcv;
+if (!$json_decoded->{'id'}) {
+    exit(1);
+}
+$id1 = $json_decoded->{'id'};
+$json_to_send  = to_json $hash_json_orig;
+$json_rcv      = send_json 'add_operation', $json_to_send;
+$json_decoded  = from_json $json_rcv;
+if (!$json_decoded->{'id'}) {
+    exit(1);
+}
+$id2 = $json_decoded->{'id'};
+
+$json_to_send = to_json {date_begin => '2008-01-01', date_end => '2020-01-01'};
+$json_rcv      = send_json 'get_operations', $json_to_send;
+$json_decoded  = from_json $json_rcv;
+
+$json_to_send = to_json {id => $id1};
+$json_rcv      = send_json 'del_operation', $json_to_send;
+if ($json_rcv != 1) {
+    print STDERR "Erreur del";
+    exit(1);
+}
+
+
+$json_to_send = to_json {id => $id2};
+$json_rcv      = send_json 'del_operation', $json_to_send;
+if ($json_rcv != 1) {
+    print STDERR "Erreur del";
+    exit(1);
+}
+
+
+
+
+
+
+
+exit 0;
 # on récupère l'opération créée
 $op_id = $hash_json->{'id'};
 $hash_json = { id => $op_id };
@@ -137,7 +289,6 @@ $hash_json = { id => $id, father_id => 2, name=>'pneux', color=>"#12345" };
 $json      = to_json $hash_json;
 $json      = send_json $json, $RPC_UPDATE_CAT;
 $hash_json = check_json $json;
-exit 0;
 
 $hash_json = { id => $id };
 $json      = to_json $hash_json;

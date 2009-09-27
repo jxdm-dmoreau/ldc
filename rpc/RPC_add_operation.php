@@ -6,7 +6,6 @@ require_once 'tools.php';
 /* 
  {
     "date":"2009-03-03",
-    "value":15,
     "description":"coucou c'est une description",
     "confirm":1,
     "cats": [{"id":1, "value":12}, {"id":2, "value": 3}],

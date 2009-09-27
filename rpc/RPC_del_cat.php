@@ -15,12 +15,12 @@ $json = str_replace('\\', '', $_POST['json']);
 debug($json);
 $json = json_decode($json);
 
-// connection a la base de données
+// connection a la base de donnÃ©es
 $link = mysql_connect(LDC_MYSQL_HOST, LDC_MYSQL_USER, LDC_MYSQL_PASSWD);
 mysql_select_db(LDC_MYSQL_DB, $link);
 
 
-MYSQL_operation_del($json);
+MYSQL_cat_del($json);
 
 $ret->result = true;
 $ret = json_encode($ret);

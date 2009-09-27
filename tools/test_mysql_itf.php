@@ -15,8 +15,9 @@ $confirm   = 1;
 $label_name = 'Surprise';
 
 
-
-
+$o = MYSQL_get_operations('2008-01-01', '2010-01-01');
+print json_encode($o);
+exit(0);
 
 /* Operation */
 $op_id = MYSQL_operation_add($date, $value, $desc, $account, $recurring, $confirm);
